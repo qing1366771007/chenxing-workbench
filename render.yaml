@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: chenxing-workbench
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install --no-audit --no-fund
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: JWT_SECRET
+        generateValue: true
+    healthCheckPath: /api/health
+    autoDeploy: yes
