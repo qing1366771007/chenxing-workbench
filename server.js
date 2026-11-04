@@ -410,7 +410,7 @@ app.use(express.static(__dirname));
 
 // 根路径直接打开工作台
 app.get('/', (req, res) => {
-res.sendFile(path.join(__dirname, '..', '辰星工作台.html'));
+res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ============================================================
