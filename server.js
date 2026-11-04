@@ -205,6 +205,41 @@ app.get('/api/data', auth, (req, res) => {
 });
 
 // ============================================================
+// 批量同步数据（本地->云端，以新的为准）
+// ============================================================
+app.post('/api/data/batch/sync', auth, (req, res) => {
+  const localData = req.body || {}; // { key: value }
+  const userId = req.user.id;
+  const now = new Date().toISOString();
+  
+  if (!userData[userId]) userData[userId] = {};
+  
+  let merged = 0;
+  Object.keys(localData).forEach(key => {
+    const cloudItem = userData[userId][key];
+    const localValue = localData[key];
+    
+    // 如果云端没有，直接写入
+    if (!cloudItem) {
+      userData[userId][key] = { value: localValue, updatedAt: now };
+      merged++;
+    }
+    // 如果是星星，取最大值
+    else if (key === 'cx_stars') {
+      const cloudStars = parseInt(cloudItem.value || '0');
+      const localStars = parseInt(localValue || '0');
+      if (localStars > cloudStars) {
+        userData[userId][key] = { value: localValue, updatedAt: now };
+        merged++;
+      }
+    }
+  });
+  
+  saveUserData();
+  res.json({ ok: true, merged, total: Object.keys(userData[userId]).length });
+});
+
+// ============================================================
 // 记录学习日志
 // ============================================================
 app.post('/api/log', auth, (req, res) => {
@@ -406,11 +441,11 @@ app.get('/api/health', (req, res) => {
 // ============================================================
 // 静态文件服务（前端页面）
 // ============================================================
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, '..')));
 
 // 根路径直接打开工作台
 app.get('/', (req, res) => {
-res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '..', '辰星工作台.html'));
 });
 
 // ============================================================
