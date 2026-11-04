@@ -4126,6 +4126,42 @@ function onLoginSuccess() {
   
   // 同步云端数据到本地
   syncFromCloud();
+  
+  // 把本地数据同步到云端（合并，星星取多的）
+  syncLocalToCloud();
+}
+
+// 把本地数据同步到云端
+function syncLocalToCloud() {
+  if (!CLOUD_ENABLED || !currentUser) return;
+  
+  // 收集本地 cx_ 开头的数据
+  var localData = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var key = localStorage.key(i);
+    if (key && key.startsWith('cx_')) {
+      var val = localStorage.getItem(key);
+      // 尝试解析JSON
+      try {
+        localData[key] = JSON.parse(val);
+      } catch (e) {
+        localData[key] = val;
+      }
+    }
+  }
+  
+  if (Object.keys(localData).length === 0) return;
+  
+  api('/data/batch/sync', {
+    method: 'POST',
+    body: localData
+  }).then(function(data) {
+    console.log('本地数据已同步到云端，合并了', data.merged, '项');
+    // 同步完再从云端拉一次，确保一致
+    syncFromCloud();
+  }).catch(function(e) {
+    console.warn('本地数据同步失败:', e.message);
+  });
 }
 
 // 从云端同步数据到本地
