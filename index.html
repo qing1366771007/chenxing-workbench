@@ -4107,12 +4107,21 @@ function onLoginSuccess() {
   document.getElementById('navUserRole').textContent = currentUser.role === 'parent' ? '家长' : '孩子';
   
   // 家长账号显示家长中心
+  var navUserEl = document.getElementById('navUser');
   if (currentUser.role === 'parent') {
     document.getElementById('parentNavCat').style.display = 'block';
     document.getElementById('parentNavBtn').style.display = 'flex';
+    navUserEl.style.background = 'linear-gradient(135deg,#ff6b6b,#ee5a24)';
+    navUserEl.style.color = '#fff';
+    // 家长登录后直接跳转到家长中心
+    setTimeout(function() {
+      switchModule('parent');
+    }, 300);
   } else {
     document.getElementById('parentNavCat').style.display = 'none';
     document.getElementById('parentNavBtn').style.display = 'none';
+    navUserEl.style.background = '';
+    navUserEl.style.color = '';
   }
   
   // 同步云端数据到本地
