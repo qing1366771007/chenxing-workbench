@@ -406,11 +406,11 @@ app.get('/api/health', (req, res) => {
 // ============================================================
 // 静态文件服务（前端页面）
 // ============================================================
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(__dirname));
 
 // 根路径直接打开工作台
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', '辰星工作台.html'));
+res.sendFile(path.join(__dirname, '..', '辰星工作台.html'));
 });
 
 // ============================================================
