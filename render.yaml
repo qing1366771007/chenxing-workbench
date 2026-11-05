@@ -2,7 +2,6 @@ services:
   - type: web
     name: chenxing-workbench
     runtime: node
-    rootDir: server
     plan: free
     buildCommand: npm install --no-audit --no-fund
     startCommand: node server.js
@@ -11,5 +10,9 @@ services:
         value: 20
       - key: JWT_SECRET
         generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
     healthCheckPath: /api/health
     autoDeploy: yes
