@@ -4513,11 +4513,10 @@ function speak(text, lang) {
   if (!text) return;
   if (text.length > 200) text = text.substring(0, 200);
 
-  // 如果是在 Android App 里，直接用原生语音合成
-  if (window.AndroidTTS && window.AndroidTTS.speak) {
+  // 如果是在 Android App 里，中文用原生语音合成（英语回退到百度TTS，避免缺少英语语音包）
+  if (window.AndroidTTS && window.AndroidTTS.speak && !lang.startsWith('en')) {
     try {
-      var langCode = lang.startsWith('en') ? 'en' : 'zh';
-      window.AndroidTTS.speak(text, langCode);
+      window.AndroidTTS.speak(text, 'zh');
       return;
     } catch(e) {
       console.warn('Android TTS 调用失败，回退到百度TTS:', e);
@@ -11153,7 +11152,7 @@ function showHanzi(item) {
   document.getElementById('hzDetailSentence').textContent = item.s;
   initWriteCanvas('hzWriteCanvas', item.c, '#ede8f8');
   speakZh(item.c);
-  detail.scrollIntoView({ behavior: 'smooth' });
+  // 去掉 scrollIntoView，避免在 App 全屏模式下页面整体上移
 }
 function speakHzCurrent() { if (hzCurrentChar) speakZh(hzCurrentChar.c); }
 
@@ -27729,7 +27728,7 @@ function showHanzi(item) {
   document.getElementById('hzDetailSentence').textContent = item.s;
   initWriteCanvas('hzWriteCanvas', item.c, '#ede8f8');
   speakZh(item.c);
-  detail.scrollIntoView({ behavior: 'smooth' });
+  // 去掉 scrollIntoView，避免在 App 全屏模式下页面整体上移
 }
 function speakHzCurrent() { if (hzCurrentChar) speakZh(hzCurrentChar.c); }
 
