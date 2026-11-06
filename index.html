@@ -2538,6 +2538,25 @@ input { font-family:inherit; }
 .login-tip {
   text-align: center; color: #b2bec3; font-size: 12px; line-height: 1.8; margin-top: 8px;
 }
+/* 账号选择卡片 */
+.account-selector {
+  display: flex; gap: 16px; justify-content: center; margin: 20px 0;
+}
+.account-card {
+  width: 120px; padding: 20px 12px; background: linear-gradient(135deg, #74b9ff, #0984e3);
+  border-radius: 16px; text-align: center; cursor: pointer;
+  transition: all .2s; box-shadow: 0 4px 12px rgba(9, 132, 227, 0.3);
+}
+.account-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(9, 132, 227, 0.4); }
+.account-card:active { transform: scale(0.95); }
+.account-card.parent-card {
+  background: linear-gradient(135deg, #fd79a8, #e84393);
+  box-shadow: 0 4px 12px rgba(232, 67, 147, 0.3);
+}
+.account-card.parent-card:hover { box-shadow: 0 6px 20px rgba(232, 67, 147, 0.4); }
+.account-avatar { font-size: 48px; margin-bottom: 8px; }
+.account-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.account-role { font-size: 12px; color: rgba(255,255,255,0.85); }
 .login-role-select {
   display: flex; align-items: center; gap: 12px; padding: 0 4px;
 }
@@ -2596,13 +2615,28 @@ input { font-family:inherit; }
   <div class="login-card">
     <div class="login-logo">🌟</div>
     <div class="login-title">辰星工作台</div>
-    <div class="login-subtitle">多账号 · 云端同步 · 学习记录</div>
-    <div class="login-tabs">
-      <button class="login-tab active" id="loginTabLogin" onclick="switchLoginTab('login')">登录</button>
-      <button class="login-tab" id="loginTabRegister" onclick="switchLoginTab('register')">注册</button>
+    <div class="login-subtitle">选择你的账号</div>
+
+    <!-- 账号选择卡片 -->
+    <div id="accountSelector" class="account-selector">
+      <div class="account-card" onclick="quickLogin('chenxing')">
+        <div class="account-avatar">👦</div>
+        <div class="account-name">辰星</div>
+        <div class="account-role">小朋友</div>
+      </div>
+      <div class="account-card parent-card" onclick="quickLogin('parent')">
+        <div class="account-avatar">👩</div>
+        <div class="account-name">家长</div>
+        <div class="account-role">家长中心</div>
+      </div>
     </div>
-    <!-- 登录表单 -->
-    <div id="loginForm" class="login-form">
+
+    <div class="login-tip">
+      <span style="color:#aaa;cursor:pointer;font-size:12px;" onclick="showPasswordLogin()">🔑 使用密码登录</span>
+    </div>
+
+    <!-- 密码登录表单（默认隐藏） -->
+    <div id="loginForm" class="login-form" style="display:none;">
       <div class="login-input-group">
         <span class="login-input-icon">👤</span>
         <input type="text" id="loginUsername" placeholder="用户名" autocomplete="username">
@@ -2614,19 +2648,11 @@ input { font-family:inherit; }
       <button class="login-btn" onclick="doLogin()">登 录</button>
       <div class="login-error" id="loginError"></div>
       <div class="login-tip">
-        💡 没有账号？点上面「注册」创建<br>
-        <span style="color:#6c5ce7;cursor:pointer;text-decoration:underline;" onclick="toggleDataMigrate()">📦 数据迁移工具（导出/导入）</span>
-      </div>
-      <div id="dataMigrateBox" style="display:none;margin-top:15px;padding:15px;background:rgba(108,92,231,0.1);border-radius:12px;text-align:left;">
-        <div style="font-weight:bold;margin-bottom:10px;color:#6c5ce7;">📦 数据迁移工具</div>
-        <div style="font-size:12px;color:#666;margin-bottom:10px;">
-          用法：在旧设备点「导出」复制数据，在新设备登录后点「导入」粘贴即可
-        </div>
-        <button onclick="exportLocalData()" style="width:100%;padding:10px;background:#6c5ce7;color:#fff;border:none;border-radius:8px;margin-bottom:8px;cursor:pointer;">📤 导出本地数据</button>
-        <button onclick="importLocalData()" style="width:100%;padding:10px;background:#00b894;color:#fff;border:none;border-radius:8px;cursor:pointer;">📥 导入数据</button>
-        <textarea id="migrateDataText" placeholder="粘贴导出的数据..." style="width:100%;margin-top:10px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;min-height:60px;resize:vertical;"></textarea>
+        💡 没有账号？<span style="color:#6c5ce7;cursor:pointer;text-decoration:underline;" onclick="switchLoginTab('register')">注册新账号</span><br>
+        <span style="color:#aaa;cursor:pointer;font-size:12px;" onclick="showAccountSelector()">← 返回账号选择</span>
       </div>
     </div>
+
     <!-- 注册表单 -->
     <div id="registerForm" class="login-form" style="display:none;">
       <div class="login-input-group">
@@ -2669,6 +2695,9 @@ input { font-family:inherit; }
       </div>
       <button class="login-btn" onclick="doRegister()">注 册</button>
       <div class="login-error" id="registerError"></div>
+      <div class="login-tip">
+        <span style="color:#aaa;cursor:pointer;font-size:12px;" onclick="showAccountSelector()">← 返回账号选择</span>
+      </div>
     </div>
   </div>
 </div>
@@ -4059,6 +4088,10 @@ function doLogin() {
   api('/login', { method: 'POST', body: { username: username, password: password } })
     .then(function(data) {
       localStorage.setItem('cx_token', data.token);
+      // 保存账号信息到本地，用于快速登录
+      var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+      saved[username] = { token: data.token, user: data.user };
+      localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
       currentUser = data.user;
       onLoginSuccess();
     })
@@ -4067,6 +4100,60 @@ function doLogin() {
       btn.disabled = false;
       btn.textContent = '登 录';
     });
+}
+
+// 快速登录（点击账号卡片直接登录）
+function quickLogin(type) {
+  var username = type === 'parent' ? '家长' : '辰星';
+  var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+  
+  // 如果本地有保存的token，直接用
+  if (saved[username] && saved[username].token) {
+    localStorage.setItem('cx_token', saved[username].token);
+    currentUser = saved[username].user;
+    onLoginSuccess();
+    return;
+  }
+  
+  // 没有保存的token，尝试用默认密码登录（第一次用）
+  var defaultPwd = type === 'parent' ? 'parent123' : 'chenxing123';
+  api('/login', { method: 'POST', body: { username: username, password: defaultPwd } })
+    .then(function(data) {
+      localStorage.setItem('cx_token', data.token);
+      var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+      saved[username] = { token: data.token, user: data.user };
+      localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
+      currentUser = data.user;
+      onLoginSuccess();
+    })
+    .catch(function(e) {
+      // 默认密码不对，跳到密码登录
+      showPasswordLogin();
+      document.getElementById('loginUsername').value = username;
+      document.getElementById('loginError').textContent = '请输入密码登录';
+    });
+}
+
+function showPasswordLogin() {
+  document.getElementById('accountSelector').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+}
+
+function showAccountSelector() {
+  document.getElementById('accountSelector').style.display = 'flex';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'none';
+}
+
+function switchLoginTab(tab) {
+  if (tab === 'login') {
+    showPasswordLogin();
+  } else {
+    document.getElementById('accountSelector').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+  }
 }
 
 function doRegister() {
