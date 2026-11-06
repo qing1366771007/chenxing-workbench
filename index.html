@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
 <title>辰星工作台 v2.11</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="辰星">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%236c5ce7'/%3E%3Ctext x='90' y='110' font-size='70' text-anchor='middle' fill='white'%3E⭐%3C/text%3E%3C/svg%3E">
 <style>
 /* ========== CSS 变量 ========== */
 :root {
@@ -2612,7 +2615,16 @@ input { font-family:inherit; }
       <div class="login-error" id="loginError"></div>
       <div class="login-tip">
         💡 没有账号？点上面「注册」创建<br>
-        🌐 必须通过 http://localhost:3000 访问才支持云端
+        <span style="color:#6c5ce7;cursor:pointer;text-decoration:underline;" onclick="toggleDataMigrate()">📦 数据迁移工具（导出/导入）</span>
+      </div>
+      <div id="dataMigrateBox" style="display:none;margin-top:15px;padding:15px;background:rgba(108,92,231,0.1);border-radius:12px;text-align:left;">
+        <div style="font-weight:bold;margin-bottom:10px;color:#6c5ce7;">📦 数据迁移工具</div>
+        <div style="font-size:12px;color:#666;margin-bottom:10px;">
+          用法：在旧设备点「导出」复制数据，在新设备登录后点「导入」粘贴即可
+        </div>
+        <button onclick="exportLocalData()" style="width:100%;padding:10px;background:#6c5ce7;color:#fff;border:none;border-radius:8px;margin-bottom:8px;cursor:pointer;">📤 导出本地数据</button>
+        <button onclick="importLocalData()" style="width:100%;padding:10px;background:#00b894;color:#fff;border:none;border-radius:8px;cursor:pointer;">📥 导入数据</button>
+        <textarea id="migrateDataText" placeholder="粘贴导出的数据..." style="width:100%;margin-top:10px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;min-height:60px;resize:vertical;"></textarea>
       </div>
     </div>
     <!-- 注册表单 -->
@@ -3938,10 +3950,23 @@ g k h j q x zh ch sh</textarea>
 // ============================================================
 // 云端同步配置
 // ============================================================
-var CLOUD_ENABLED = false; // 是否启用云端
-var CLOUD_API = '/api';    // API地址（同源部署）
+var CLOUD_ENABLED = true; // 是否启用云端
+var CLOUD_API = 'https://chenxing-workbench.onrender.com/api';    // API地址（云端部署）
 var currentUser = null;    // 当前用户
 var selectedAvatar = '👦'; // 注册时选择的头像
+
+// ============================================================
+// PWA 注册（添加到主屏幕 + 离线缓存）
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('✅ PWA Service Worker 已注册:', reg.scope);
+    }).catch(function(err) {
+      console.warn('⚠️ PWA 注册失败:', err);
+    });
+  });
+}
 
 // 检测是否在服务器上运行（支持云端）
 function checkCloudAvailable() {
@@ -4204,6 +4229,67 @@ function refreshAllModulesData() {
 }
 
 // ============================================================
+// 数据迁移工具（导出/导入本地数据）
+// ============================================================
+function toggleDataMigrate() {
+  var box = document.getElementById('dataMigrateBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+function exportLocalData() {
+  var data = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var key = localStorage.key(i);
+    if (key && key.startsWith('cx_')) {
+      data[key] = localStorage.getItem(key);
+    }
+  }
+  var str = JSON.stringify(data);
+  document.getElementById('migrateDataText').value = str;
+  
+  // 尝试复制到剪贴板
+  try {
+    var textarea = document.createElement('textarea');
+    textarea.value = str;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert('✅ 数据已导出并复制到剪贴板！\n共 ' + Object.keys(data).length + ' 项数据\n\n去新设备粘贴导入即可~');
+  } catch (e) {
+    alert('请手动复制下面文本框里的全部内容~');
+  }
+}
+
+function importLocalData() {
+  var str = document.getElementById('migrateDataText').value.trim();
+  if (!str) {
+    alert('请先粘贴要导入的数据~');
+    return;
+  }
+  
+  try {
+    var data = JSON.parse(str);
+    var count = 0;
+    Object.keys(data).forEach(function(key) {
+      if (key.startsWith('cx_')) {
+        localStorage.setItem(key, data[key]);
+        count++;
+      }
+    });
+    
+    // 刷新星星和页面
+    totalStars = parseInt(localStorage.getItem('cx_stars') || '0');
+    updateTotalStars();
+    if (typeof initHome === 'function') initHome();
+    
+    alert('✅ 导入成功！\n共导入 ' + count + ' 项数据\n\n刷新页面即可看到效果~');
+  } catch (e) {
+    alert('❌ 导入失败：数据格式不对，请确认复制完整了~');
+  }
+}
+
+// ============================================================
 // 家长中心
 // ============================================================
 function initParentCenter() {
@@ -4426,6 +4512,17 @@ function speak(text, lang) {
   text = String(text).trim();
   if (!text) return;
   if (text.length > 200) text = text.substring(0, 200);
+
+  // 如果是在 Android App 里，直接用原生语音合成
+  if (window.AndroidTTS && window.AndroidTTS.speak) {
+    try {
+      var langCode = lang.startsWith('en') ? 'en' : 'zh';
+      window.AndroidTTS.speak(text, langCode);
+      return;
+    } catch(e) {
+      console.warn('Android TTS 调用失败，回退到百度TTS:', e);
+    }
+  }
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
   var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
