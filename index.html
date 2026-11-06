@@ -12585,8 +12585,11 @@ function renderThink() {
 
   var ex = thinkExercises[thinkIndex];
   document.getElementById('thinkType').innerHTML = '<span class="think-group-badge">第' + (currentGroup + 1) + '组 / 共' + THINK_TOTAL_GROUPS + '组</span> ' + ex.type;
-  document.getElementById('thinkQuestion').textContent = ex.q;
-  speakQuestion(ex.q);
+  var qEl = document.getElementById('thinkQuestion');
+  qEl.textContent = ex.q;
+  qEl.style.cursor = 'pointer';
+  qEl.title = '点一下听题目';
+  qEl.onclick = function() { speakQuestion(ex.q); };
 
   // 分组进度条
   const prog = document.getElementById('thinkProgress');
@@ -29178,8 +29181,11 @@ function renderThink() {
 
   var ex = thinkExercises[thinkIndex];
   document.getElementById('thinkType').innerHTML = '<span class="think-group-badge">第' + (currentGroup + 1) + '组 / 共' + THINK_TOTAL_GROUPS + '组</span> ' + ex.type;
-  document.getElementById('thinkQuestion').textContent = ex.q;
-  speakQuestion(ex.q);
+  var qEl = document.getElementById('thinkQuestion');
+  qEl.textContent = ex.q;
+  qEl.style.cursor = 'pointer';
+  qEl.title = '点一下听题目';
+  qEl.onclick = function() { speakQuestion(ex.q); };
 
   // 分组进度条
   const prog = document.getElementById('thinkProgress');
