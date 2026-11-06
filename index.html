@@ -4524,12 +4524,12 @@ function speak(text, lang) {
   }
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
-  var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
-    '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
-
-  // 在 App 里用服务器代理，绕过百度防盗链
-  if (window.AndroidTTS && lang.startsWith('en')) {
-    url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
+  // 英语统一走服务器代理，绕过百度防盗链
+  if (lang.startsWith('en')) {
+    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
+  } else {
+    var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
+      '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
   }
 
   var player = _getTTSPlayer();
@@ -4730,10 +4730,9 @@ function speakEnWithZh(en, zh) {
     };
   }
 
-  // 第一步：播放英文
+  // 第一步：播放英文（走服务器代理，绕过百度防盗链）
   var baiduLan = 'en';
-  var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
-    '&text=' + encodeURIComponent(en) + '&spd=3&source=web';
+  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(en) + '&spd=3';
   if (label) label.textContent = en.length > 12 ? en.substring(0, 12) + '...' : en;
   bar.classList.add('show');
   player.src = url;
@@ -21353,12 +21352,12 @@ function speak(text, lang) {
   }
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
-  var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
-    '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
-
-  // 在 App 里英语用服务器代理，绕过百度防盗链
-  if (window.AndroidTTS && lang.startsWith('en')) {
-    url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
+  // 英语统一走服务器代理，绕过百度防盗链
+  if (lang.startsWith('en')) {
+    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
+  } else {
+    var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
+      '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
   }
 
   var player = _getTTSPlayer();
@@ -21559,10 +21558,9 @@ function speakEnWithZh(en, zh) {
     };
   }
 
-  // 第一步：播放英文
+  // 第一步：播放英文（走服务器代理，绕过百度防盗链）
   var baiduLan = 'en';
-  var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
-    '&text=' + encodeURIComponent(en) + '&spd=3&source=web';
+  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(en) + '&spd=3';
   if (label) label.textContent = en.length > 12 ? en.substring(0, 12) + '...' : en;
   bar.classList.add('show');
   player.src = url;
