@@ -560,6 +560,13 @@ app.get('/api/health', async (req, res) => {
 // ============================================================
 // 静态文件服务（前端页面）
 // ============================================================
+// 强制不缓存，确保App/WebView每次都加载最新版本
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 app.use(express.static(__dirname));
 
 // ============================================================
