@@ -562,6 +562,44 @@ app.get('/api/health', async (req, res) => {
 // ============================================================
 app.use(express.static(__dirname));
 
+// ============================================================
+// 百度TTS代理接口 - 解决App/WebView防盗链问题
+// ============================================================
+app.get('/api/tts', async (req, res) => {
+  const text = req.query.text || '';
+  const lang = req.query.lang || 'zh';
+  const spd = req.query.spd || '3';
+
+  if (!text) {
+    return res.status(400).send('text is required');
+  }
+
+  const baiduLan = lang.startsWith('en') ? 'en' : 'zh';
+  const url = `https://fanyi.baidu.com/gettts?lan=${baiduLan}&text=${encodeURIComponent(text)}&spd=${spd}&source=web`;
+
+  try {
+    const https = require('https');
+    https.get(url, {
+      headers: {
+        'Referer': 'https://fanyi.baidu.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    }, (response) => {
+      if (response.statusCode === 200) {
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        response.pipe(res);
+      } else {
+        res.status(response.statusCode).send('TTS request failed');
+      }
+    }).on('error', (err) => {
+      res.status(500).send('TTS proxy error: ' + err.message);
+    });
+  } catch (err) {
+    res.status(500).send('TTS proxy error');
+  }
+});
+
 // 根路径直接打开工作台
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
