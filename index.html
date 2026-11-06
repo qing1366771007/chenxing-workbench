@@ -4527,6 +4527,11 @@ function speak(text, lang) {
   var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
     '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
 
+  // 在 App 里用服务器代理，绕过百度防盗链
+  if (window.AndroidTTS && lang.startsWith('en')) {
+    url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
+  }
+
   var player = _getTTSPlayer();
   var bar = _getTTSBar();
   var label = _getTTSLabel();
@@ -12580,8 +12585,11 @@ function renderThink() {
 
   var ex = thinkExercises[thinkIndex];
   document.getElementById('thinkType').innerHTML = '<span class="think-group-badge">第' + (currentGroup + 1) + '组 / 共' + THINK_TOTAL_GROUPS + '组</span> ' + ex.type;
-  document.getElementById('thinkQuestion').textContent = ex.q;
-  speakQuestion(ex.q);
+  var qEl = document.getElementById('thinkQuestion');
+  qEl.textContent = ex.q;
+  qEl.style.cursor = 'pointer';
+  qEl.title = '点一下听题目';
+  qEl.onclick = function() { speakQuestion(ex.q); };
 
   // 分组进度条
   const prog = document.getElementById('thinkProgress');
@@ -21332,9 +21340,26 @@ function speak(text, lang) {
   if (!text) return;
   if (text.length > 200) text = text.substring(0, 200);
 
+  // 在 Android App 里，中文用原生TTS，英语用服务器代理
+  if (window.AndroidTTS && window.AndroidTTS.speak) {
+    if (!lang.startsWith('en')) {
+      try {
+        window.AndroidTTS.speak(text, 'zh');
+        return;
+      } catch(e) {
+        console.warn('Android TTS 调用失败，回退到百度TTS:', e);
+      }
+    }
+  }
+
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
   var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
     '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
+
+  // 在 App 里英语用服务器代理，绕过百度防盗链
+  if (window.AndroidTTS && lang.startsWith('en')) {
+    url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
+  }
 
   var player = _getTTSPlayer();
   var bar = _getTTSBar();
@@ -29156,8 +29181,11 @@ function renderThink() {
 
   var ex = thinkExercises[thinkIndex];
   document.getElementById('thinkType').innerHTML = '<span class="think-group-badge">第' + (currentGroup + 1) + '组 / 共' + THINK_TOTAL_GROUPS + '组</span> ' + ex.type;
-  document.getElementById('thinkQuestion').textContent = ex.q;
-  speakQuestion(ex.q);
+  var qEl = document.getElementById('thinkQuestion');
+  qEl.textContent = ex.q;
+  qEl.style.cursor = 'pointer';
+  qEl.title = '点一下听题目';
+  qEl.onclick = function() { speakQuestion(ex.q); };
 
   // 分组进度条
   const prog = document.getElementById('thinkProgress');
