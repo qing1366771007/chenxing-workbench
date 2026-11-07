@@ -20571,52 +20571,17 @@ input { font-family:inherit; }
     <div id="module-math" class="module-screen">
       <div class="module-header"><span class="mh-icon">🔢</span><span class="mh-title">数学练习</span></div>
       <div class="module-body">
-        <div class="math-category-grid">
-          <div class="math-cat-card" onclick="switchMathTab('calc',this)">
-            <div class="math-cat-icon">➕</div>
-            <div class="math-cat-title">加减法</div>
-            <div class="math-cat-desc">10/20/50/100以内</div>
-          </div>
-          <div class="math-cat-card" onclick="switchMathTab('compare',this)">
-            <div class="math-cat-icon">⚖️</div>
-            <div class="math-cat-title">比大小</div>
-            <div class="math-cat-desc">大于小于等于</div>
-          </div>
-          <div class="math-cat-card" onclick="switchMathTab('count',this)">
-            <div class="math-cat-icon">🔢</div>
-            <div class="math-cat-title">数一数</div>
-            <div class="math-cat-desc">看图数数</div>
-          </div>
-          <div class="math-cat-card" onclick="switchMathTab('sequence',this)">
-            <div class="math-cat-icon">🔍</div>
-            <div class="math-cat-title">找规律</div>
-            <div class="math-cat-desc">填空缺数字</div>
-          </div>
-          <div class="math-cat-card" onclick="switchMathTab('fillnum',this)">
-            <div class="math-cat-icon">❓</div>
-            <div class="math-cat-title">填数字</div>
-            <div class="math-cat-desc">补全算式</div>
-          </div>
-          <div class="math-cat-card" onclick="switchMathTab('fillop',this)">
-            <div class="math-cat-icon">➕➖</div>
-            <div class="math-cat-title">填符号</div>
-            <div class="math-cat-desc">加减号填空</div>
-          </div>
-          <div class="math-cat-card mul-card" onclick="switchMathTab('mul',this)">
-            <div class="math-cat-icon">✖️</div>
-            <div class="math-cat-title">乘法口诀</div>
-            <div class="math-cat-desc">1~9乘法练习</div>
-          </div>
-          <div class="math-cat-card print-card" onclick="openMathPrintDialog()">
-            <div class="math-cat-icon">🖨️</div>
-            <div class="math-cat-title">打印题册</div>
-            <div class="math-cat-desc">生成可打印PDF</div>
-          </div>
+        <div class="tab-bar" id="mathTabBar">
+          <div class="tab-item active" onclick="switchMathTab('calc',this)">➕ 加减法</div>
+          <div class="tab-item" onclick="switchMathTab('compare',this)">⚖️ 比大小</div>
+          <div class="tab-item" onclick="switchMathTab('count',this)">🔢 数一数</div>
+          <div class="tab-item" onclick="switchMathTab('sequence',this)">🔍 找规律</div>
+          <div class="tab-item" onclick="switchMathTab('fillnum',this)">❓ 填数字</div>
+          <div class="tab-item" onclick="switchMathTab('fillop',this)">➕➖ 填符号</div>
+          <div class="tab-item" onclick="switchMathTab('mul',this)">✖️ 乘法口诀</div>
+          <div class="tab-item" onclick="openMathPrintDialog()" style="background:#00cec9;color:#fff;">🖨️ 打印题册</div>
         </div>
-        <div id="mathCalcArea" style="display:none;">
-          <div class="math-back-row">
-            <button class="tab-item" onclick="backToMathCategories()">← 返回分类</button>
-          </div>
+        <div id="mathCalcArea">
           <div class="math-card">
             <div class="math-score-row">
               <div class="math-score-item"><div class="label">答对</div><div class="value" id="mathCorrect">0</div></div>
@@ -25747,10 +25712,13 @@ let mathCorrectCount = 0, mathWrongCount = 0, mathStarCount = 0;
 
 function switchMathTab(tab, el) {
   mathTab = tab;
-  // 隐藏分类网格
-  var grid = document.querySelector('.math-category-grid');
-  if (grid) grid.style.display = 'none';
-  // 显示返回按钮所在的顶部栏（如果有的话就不用再加了）
+  // 切换tab高亮
+  var bar = document.getElementById('mathTabBar');
+  if (bar && el) {
+    bar.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+  // 显示对应区域
   document.getElementById('mathCalcArea').style.display = tab === 'calc' ? 'block' : 'none';
   document.getElementById('mathCompareArea').style.display = tab === 'compare' ? 'block' : 'none';
   document.getElementById('mathCountArea').style.display = tab === 'count' ? 'block' : 'none';
@@ -25768,17 +25736,6 @@ function switchMathTab(tab, el) {
   document.getElementById('module-math').querySelector('.module-body').scrollTop = 0;
 }
 
-function backToMathCategories() {
-  var grid = document.querySelector('.math-category-grid');
-  if (grid) grid.style.display = 'grid';
-  document.getElementById('mathCalcArea').style.display = 'none';
-  document.getElementById('mathCompareArea').style.display = 'none';
-  document.getElementById('mathCountArea').style.display = 'none';
-  document.getElementById('mathSeqArea').style.display = 'none';
-  document.getElementById('mathFillNumArea').style.display = 'none';
-  document.getElementById('mathFillOpArea').style.display = 'none';
-  document.getElementById('mathMulArea').style.display = 'none';
-}
 function setMathLevel(max, el) {
   mathMax = max;
   if (el) {
