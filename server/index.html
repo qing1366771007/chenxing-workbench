@@ -4148,16 +4148,33 @@ function showAccountSelector() {
 
 // 自动快速登录（页面加载时自动尝试辰星账号）
 function autoQuickLogin() {
+  var overlay = document.getElementById('loginOverlay');
+  // 先隐藏账号选择，显示加载状态
+  var selector = document.getElementById('accountSelector');
+  if (selector) selector.style.display = 'none';
+  
   // 先检查本地有没有保存的token
   var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
   if (saved['辰星'] && saved['辰星'].token) {
     localStorage.setItem('cx_token', saved['辰星'].token);
-    currentUser = saved['辰星'].user;
-    document.getElementById('loginOverlay').style.display = 'none';
-    onLoginSuccess();
+    // 验证一下token
+    api('/user').then(function(data) {
+      currentUser = data.user;
+      overlay.style.display = 'none';
+      onLoginSuccess();
+    }).catch(function() {
+      // token无效，重新登录
+      tryLoginOrRegister();
+    });
     return;
   }
-  // 没有保存的token，用默认密码尝试登录
+  // 没有保存的token，尝试登录，失败就注册
+  tryLoginOrRegister();
+}
+
+function tryLoginOrRegister() {
+  var overlay = document.getElementById('loginOverlay');
+  // 先尝试登录
   api('/login', { method: 'POST', body: { username: '辰星', password: 'chenxing123' } })
     .then(function(data) {
       localStorage.setItem('cx_token', data.token);
@@ -4165,12 +4182,26 @@ function autoQuickLogin() {
       saved['辰星'] = { token: data.token, user: data.user };
       localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
       currentUser = data.user;
-      document.getElementById('loginOverlay').style.display = 'none';
+      overlay.style.display = 'none';
       onLoginSuccess();
     })
     .catch(function() {
-      // 登录失败，显示登录页让用户手动操作
-      document.getElementById('accountSelector').style.display = 'flex';
+      // 登录失败，自动注册
+      api('/register', { method: 'POST', body: { username: '辰星', password: 'chenxing123', role: 'child' } })
+        .then(function(data) {
+          localStorage.setItem('cx_token', data.token);
+          var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+          saved['辰星'] = { token: data.token, user: data.user };
+          localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
+          currentUser = data.user;
+          overlay.style.display = 'none';
+          onLoginSuccess();
+        })
+        .catch(function() {
+          // 注册也失败，显示登录页
+          var selector = document.getElementById('accountSelector');
+          if (selector) selector.style.display = 'flex';
+        });
     });
 }
 
