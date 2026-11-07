@@ -2846,8 +2846,18 @@ input { font-family:inherit; }
     <div id="module-engsentence" class="module-screen">
       <div class="module-header"><span class="mh-icon">💬</span><span class="mh-title">英语句子</span></div>
       <div class="module-body">
-        <div class="eng-sent-cat-bar" id="engSentCatBar"></div>
-        <div class="eng-sent-list" id="engSentList"></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button class="tab-item active" id="engSentModeCard" onclick="setEngSentMode('card',this)">📝 句子卡片</button>
+          <button class="tab-item" id="engSentModeConv" onclick="setEngSentMode('conv',this)">🎬 场景对话</button>
+        </div>
+        <div id="engSentCardMode">
+          <div class="eng-sent-cat-bar" id="engSentCatBar"></div>
+          <div class="eng-sent-list" id="engSentList"></div>
+        </div>
+        <div id="engSentConvMode" style="display:none;">
+          <div id="engSentConvCatBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+          <div id="engSentConvScenes"></div>
+        </div>
       </div>
     </div>
 
@@ -2871,22 +2881,8 @@ input { font-family:inherit; }
           <div class="eng-test-feedback" id="engTestFeedback"></div>
           <button class="eng-test-next-btn" id="engTestNextBtn" onclick="engTestNext()" style="display:none;">下一题 ➡️</button>
         </div>
-        <div class="section-title">简单对话</div>
-        <div class="content-card" id="engDialogs"></div>
         <div class="section-title" id="engSongSectionTitle" style="display:none;">🎵 英语数字歌 (1-10)</div>
         <div class="content-card eng-song-card" id="engSongArea" style="display:none;"></div>
-        <!-- 日常对话区域 -->
-        <div id="engConvArea" style="display:none;">
-          <div class="section-title">🎬 场景对话</div>
-          <div id="engConvCatBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-          <div class="section-title">🎭 角色扮演</div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button class="tab-item active" id="engRoleBoth" onclick="setEngConvRole('both',this)">👥 双方都显示</button>
-            <button class="tab-item" id="engRoleA" onclick="setEngConvRole('left',this)">🎤 我扮演左边</button>
-            <button class="tab-item" id="engRoleB" onclick="setEngConvRole('right',this)">🎤 我扮演右边</button>
-          </div>
-          <div id="engConvScenes"></div>
-        </div>
       </div>
     </div>
 
@@ -5596,10 +5592,75 @@ const engSentenceData = {
   { en: 'Winter is cold.', zh: '冬天很冷。', emoji: '⛄' },
   { en: "Let's go to the park!", zh: '我们去公园吧！', emoji: '🌳' },
 ],
+'课本·U1 问候': [
+  { en: "Hello! I'm Binbin.", zh: '你好！我是彬彬。', emoji: '👋' },
+  { en: "Hi! I'm Sarah.", zh: '嗨！我是萨拉。', emoji: '👋' },
+  { en: "What's your name?", zh: '你叫什么名字？', emoji: '❓' },
+  { en: 'My name is Chen Jie.', zh: '我的名字叫陈杰。', emoji: '🪪' },
+  { en: 'Goodbye!', zh: '再见！', emoji: '👋' },
+  { en: 'Bye!', zh: '再见！', emoji: '👋' },
+  { en: "Let's play together!", zh: '我们一起玩吧！', emoji: '🎮' },
+  { en: 'Come on!', zh: '来吧！', emoji: '🙌' },
+],
+'课本·U2 课堂': [
+  { en: 'Good morning!', zh: '早上好！', emoji: '🌅' },
+  { en: 'Good morning, Miss White!', zh: '早上好，怀特老师！', emoji: '👩‍🏫' },
+  { en: 'Open your book.', zh: '打开你的书。', emoji: '📖' },
+  { en: 'Close your book.', zh: '合上你的书。', emoji: '📕' },
+  { en: 'Show me your pencil.', zh: '给我看你的铅笔。', emoji: '✏️' },
+  { en: 'Show me your book.', zh: '给我看你的书。', emoji: '📖' },
+  { en: "I'm ready!", zh: '我准备好了！', emoji: '✅' },
+  { en: 'Hooray!', zh: '好耶！', emoji: '🎉' },
+],
+'课本·U3 听说': [
+  { en: 'Look!', zh: '看！', emoji: '👁️' },
+  { en: 'Listen!', zh: '听！', emoji: '👂' },
+  { en: 'Say!', zh: '说！', emoji: '🗣️' },
+  { en: 'Read!', zh: '读！', emoji: '📖' },
+  { en: 'I look.', zh: '我看。', emoji: '👁️' },
+  { en: 'I listen.', zh: '我听。', emoji: '👂' },
+  { en: 'Look at this!', zh: '看这个！', emoji: '👆' },
+  { en: "What's this?", zh: '这是什么？', emoji: '❓' },
+  { en: "It's a book.", zh: '这是一本书。', emoji: '📖' },
+],
+'课本·U4 上学': [
+  { en: 'This is my bag.', zh: '这是我的书包。', emoji: '🎒' },
+  { en: 'This is my book.', zh: '这是我的书。', emoji: '📖' },
+  { en: 'This is my pencil.', zh: '这是我的铅笔。', emoji: '✏️' },
+  { en: 'Is this your pencil?', zh: '这是你的铅笔吗？', emoji: '❓' },
+  { en: 'Yes, it is.', zh: '是的，它是。', emoji: '✅' },
+  { en: "No, it isn't.", zh: '不，它不是。', emoji: '❌' },
+  { en: 'Show me your bottle.', zh: '给我看你的瓶子。', emoji: '🧴' },
+  { en: "It's for you.", zh: '这是给你的。', emoji: '🎁' },
+  { en: 'Thank you.', zh: '谢谢你。', emoji: '🙏' },
+],
+'课本·U5 人物': [
+  { en: 'This is my mum.', zh: '这是我的妈妈。', emoji: '👩' },
+  { en: 'This is my dad.', zh: '这是我的爸爸。', emoji: '👨' },
+  { en: 'This is my teacher.', zh: '这是我的老师。', emoji: '👩‍🏫' },
+  { en: 'This is my classmate.', zh: '这是我的同学。', emoji: '🧑‍🎓' },
+  { en: "Who's he?", zh: '他是谁？', emoji: '❓' },
+  { en: 'He is Li Dong.', zh: '他是李东。', emoji: '👨' },
+  { en: "Who's she?", zh: '她是谁？', emoji: '❓' },
+  { en: 'She is my mum.', zh: '她是我的妈妈。', emoji: '👩' },
+  { en: 'I love my mum.', zh: '我爱我的妈妈。', emoji: '❤️' },
+],
 };
 
 // 英语句子模块
 let engSentCurrentCat = null;
+let engSentMode = 'card'; // 'card' or 'conv'
+let engSentConvCat = null;
+
+function setEngSentMode(mode, btn) {
+  engSentMode = mode;
+  document.getElementById('engSentModeCard').classList.toggle('active', mode === 'card');
+  document.getElementById('engSentModeConv').classList.toggle('active', mode === 'conv');
+  document.getElementById('engSentCardMode').style.display = mode === 'card' ? '' : 'none';
+  document.getElementById('engSentConvMode').style.display = mode === 'conv' ? '' : 'none';
+  if (mode === 'conv') { renderEngSentConv(); }
+}
+
 function initEngSentence() {
   const cats = Object.keys(engSentenceData);
   if (!engSentCurrentCat) engSentCurrentCat = cats[0];
@@ -5628,6 +5689,85 @@ function initEngSentence() {
       '<div class="eng-sent-play">🔊</div>';
     list.appendChild(card);
   });
+}
+
+// 渲染场景对话
+function renderEngSentConv() {
+  const catBar = document.getElementById('engSentConvCatBar');
+  const scenesEl = document.getElementById('engSentConvScenes');
+  if (!catBar || !scenesEl) return;
+  
+  if (!engSentConvCat) engSentConvCat = engConversations[0].cat;
+  catBar.innerHTML = '';
+  engConversations.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-item' + (cat.cat === engSentConvCat ? ' active' : '');
+    btn.textContent = cat.icon + ' ' + cat.cat;
+    btn.onclick = () => { engSentConvCat = cat.cat; renderEngSentConv(); };
+    catBar.appendChild(btn);
+  });
+  
+  const catData = engConversations.find(c => c.cat === engSentConvCat);
+  if (!catData) return;
+  
+  scenesEl.innerHTML = '';
+  catData.scenes.forEach(scene => {
+    const sceneCard = document.createElement('div');
+    sceneCard.className = 'content-card';
+    sceneCard.style.marginBottom = '12px';
+    
+    const title = document.createElement('div');
+    title.style.fontWeight = '700';
+    title.style.fontSize = '16px';
+    title.style.marginBottom = '10px';
+    title.style.color = 'var(--text-dark)';
+    title.textContent = '🎭 ' + scene.title;
+    sceneCard.appendChild(title);
+    
+    scene.lines.forEach(line => {
+      const lineEl = document.createElement('div');
+      lineEl.style.padding = '8px 12px';
+      lineEl.style.marginBottom = '6px';
+      lineEl.style.borderRadius = '10px';
+      lineEl.style.background = line.role === 'Kid' || line.role === 'B' 
+        ? 'rgba(116,185,255,0.15)' 
+        : 'rgba(253,121,168,0.1)';
+      lineEl.style.cursor = 'pointer';
+      lineEl.innerHTML = 
+        '<div style="font-size:12px;color:var(--text-light);margin-bottom:2px;">' + line.role + '</div>' +
+        '<div style="font-size:15px;font-weight:600;color:var(--text-dark);">' + line.en + '</div>' +
+        '<div style="font-size:13px;color:var(--text-light);margin-top:2px;">' + line.zh + '</div>';
+      lineEl.onclick = () => speakEnWithZh(line.en, line.zh);
+      sceneCard.appendChild(lineEl);
+    });
+    
+    // 播放全部按钮
+    const playAllBtn = document.createElement('button');
+    playAllBtn.className = 'tab-item';
+    playAllBtn.style.marginTop = '8px';
+    playAllBtn.style.background = 'var(--star-blue)';
+    playAllBtn.style.color = '#fff';
+    playAllBtn.style.border = 'none';
+    playAllBtn.textContent = '🔊 播放全部';
+    playAllBtn.onclick = () => playConvSceneAll(scene);
+    sceneCard.appendChild(playAllBtn);
+    
+    scenesEl.appendChild(sceneCard);
+  });
+}
+
+// 播放整个场景对话
+let _convPlayTimeout = null;
+function playConvSceneAll(scene) {
+  if (_convPlayTimeout) { clearTimeout(_convPlayTimeout); _convPlayTimeout = null; }
+  let idx = 0;
+  function playNext() {
+    if (idx >= scene.lines.length) return;
+    speakEn(scene.lines[idx].en);
+    idx++;
+    _convPlayTimeout = setTimeout(playNext, 2500);
+  }
+  playNext();
 }
 
 // 英语日常对话练习 - 场景化对话
@@ -6007,21 +6147,15 @@ function initEnglish() {
   songTab.textContent = '🎵 歌曲';
   songTab.onclick = () => { stopEngSong(); engCurrentCat = 'songs'; initEnglish(); };
   tabs.appendChild(songTab);
-  // 日常对话标签
-  const convTab = document.createElement('div');
-  convTab.className = 'eng-word-cat-btn' + (engCurrentCat === 'conversation' ? ' active' : '');
-  convTab.textContent = '💬 日常对话';
-  convTab.onclick = () => { stopEngSong(); engCurrentCat = 'conversation'; initEnglish(); };
-  tabs.appendChild(convTab);
 
   // 歌曲模式
   const songArea = document.getElementById('engSongArea');
   const songTitle = document.getElementById('engSongSectionTitle');
   const cardsEl = document.getElementById('engCards');
   const testArea = document.querySelector('.eng-test-card');
-  const testTitle = cardsEl.nextElementSibling;
-  const dialogTitle = document.querySelector('#engDialogs').previousElementSibling;
+  const testTitle = testArea ? testArea.previousElementSibling : null;
   const dialogsEl = document.getElementById('engDialogs');
+  const dialogTitle = dialogsEl ? dialogsEl.previousElementSibling : null;
 
   if (engCurrentCat === 'songs') {
     // 隐藏单词、测试、对话
@@ -6406,9 +6540,8 @@ function engTestPlayAudio() {
   player.onended = null;
   player.onerror = null;
 
-  // 构建百度TTS URL
-  var url = 'https://fanyi.baidu.com/gettts?lan=en&text=' +
-    encodeURIComponent(_engTestCurrent.en) + '&spd=3&source=web';
+  // 走服务器代理，绕过百度防盗链
+  var url = '/api/tts?lang=en&text=' + encodeURIComponent(_engTestCurrent.en) + '&spd=3';
 
   if (label) label.textContent = '🎧 ' + (_engTestCurrent.en.length > 12 ? _engTestCurrent.en.substring(0, 12) + '...' : _engTestCurrent.en);
   bar.classList.add('show');
@@ -20373,22 +20506,8 @@ input { font-family:inherit; }
           <div class="eng-test-feedback" id="engTestFeedback"></div>
           <button class="eng-test-next-btn" id="engTestNextBtn" onclick="engTestNext()" style="display:none;">下一题 ➡️</button>
         </div>
-        <div class="section-title">简单对话</div>
-        <div class="content-card" id="engDialogs"></div>
         <div class="section-title" id="engSongSectionTitle" style="display:none;">🎵 英语数字歌 (1-10)</div>
         <div class="content-card eng-song-card" id="engSongArea" style="display:none;"></div>
-        <!-- 日常对话区域 -->
-        <div id="engConvArea" style="display:none;">
-          <div class="section-title">🎬 场景对话</div>
-          <div id="engConvCatBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-          <div class="section-title">🎭 角色扮演</div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button class="tab-item active" id="engRoleBoth" onclick="setEngConvRole('both',this)">👥 双方都显示</button>
-            <button class="tab-item" id="engRoleA" onclick="setEngConvRole('left',this)">🎤 我扮演左边</button>
-            <button class="tab-item" id="engRoleB" onclick="setEngConvRole('right',this)">🎤 我扮演右边</button>
-          </div>
-          <div id="engConvScenes"></div>
-        </div>
       </div>
     </div>
 
@@ -22720,21 +22839,15 @@ function initEnglish() {
   songTab.textContent = '🎵 歌曲';
   songTab.onclick = () => { stopEngSong(); engCurrentCat = 'songs'; initEnglish(); };
   tabs.appendChild(songTab);
-  // 日常对话标签
-  const convTab = document.createElement('div');
-  convTab.className = 'tab-item' + (engCurrentCat === 'conversation' ? ' active' : '');
-  convTab.textContent = '💬 日常对话';
-  convTab.onclick = () => { stopEngSong(); engCurrentCat = 'conversation'; initEnglish(); };
-  tabs.appendChild(convTab);
 
   // 歌曲模式
   const songArea = document.getElementById('engSongArea');
   const songTitle = document.getElementById('engSongSectionTitle');
   const cardsEl = document.getElementById('engCards');
   const testArea = document.querySelector('.eng-test-card');
-  const testTitle = cardsEl.nextElementSibling;
-  const dialogTitle = document.querySelector('#engDialogs').previousElementSibling;
+  const testTitle = testArea ? testArea.previousElementSibling : null;
   const dialogsEl = document.getElementById('engDialogs');
+  const dialogTitle = dialogsEl ? dialogsEl.previousElementSibling : null;
 
   if (engCurrentCat === 'songs') {
     // 隐藏单词、测试、对话
@@ -23114,9 +23227,8 @@ function engTestPlayAudio() {
   player.onended = null;
   player.onerror = null;
 
-  // 构建百度TTS URL
-  var url = 'https://fanyi.baidu.com/gettts?lan=en&text=' +
-    encodeURIComponent(_engTestCurrent.en) + '&spd=3&source=web';
+  // 走服务器代理，绕过百度防盗链
+  var url = '/api/tts?lang=en&text=' + encodeURIComponent(_engTestCurrent.en) + '&spd=3';
 
   if (label) label.textContent = '🎧 ' + (_engTestCurrent.en.length > 12 ? _engTestCurrent.en.substring(0, 12) + '...' : _engTestCurrent.en);
   bar.classList.add('show');
