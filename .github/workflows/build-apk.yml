@@ -8,9 +8,12 @@ on:
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
-# 允许发布 Release（写 contents 权限）
+# 显式声明权限时，未列出的权限会被置为 none
+# setup-gradle 读写缓存需要 actions: write，写汇总需要 checks: write
 permissions:
   contents: write
+  actions: write
+  checks: write
 
 jobs:
   build:
