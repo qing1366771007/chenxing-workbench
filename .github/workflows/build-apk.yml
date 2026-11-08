@@ -26,11 +26,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # runner 自带的 Gradle 版本太新，AGP 8.1 要求 8.x → 手动装 8.3
+      # AGP 8.1 要求 Gradle 8.x；官方源在 runner 上取不到 → 官方失败自动切腾讯云镜像
       - name: Install Gradle 8.3
         run: |
           cd "$RUNNER_TEMP"
-          curl -fsSL -o gradle.zip https://services.gradle.org/distributions/gradle-8.3-bin.zip
+          if curl -fsSL --retry 2 --max-time 120 -o gradle.zip \
+               https://services.gradle.org/distributions/gradle-8.3-bin.zip; then
+            echo "官方源下载成功"
+          else
+            echo "官方源失败，改用腾讯云镜像"
+            rm -f gradle.zip
+            curl -fsSL --retry 3 --max-time 120 -o gradle.zip \
+              https://mirrors.cloud.tencent.com/gradle/gradle-8.3-bin.zip
+          fi
+          ls -lh gradle.zip
           unzip -q gradle.zip
           echo "$RUNNER_TEMP/gradle-8.3/bin" >> "$GITHUB_PATH"
 
@@ -40,6 +49,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
           echo "ANDROID_HOME=$ANDROID_HOME"
           ls "$ANDROID_SDK_ROOT" 2>/dev/null || echo "SDK 目录不存在"
+          ls "$ANDROID_SDK_ROOT/platforms" 2>/dev/null || echo "platforms 不存在"
 
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
@@ -70,3 +80,34 @@ jobs:
           make_latest: true
           draft: false
           prerelease: false
+
+      # 失败时把环境快照提交回仓库，方便本地直接查原因（不匹配 paths，不会循环触发）
+      - name: Dump env on failure
+        if: failure()
+        run: |
+          {
+            echo "# 构建失败环境快照"
+            echo ""
+            echo "时间: $(date -u)"
+            echo ""
+            echo "## gradle --version"
+            echo '```'
+            gradle --version 2>&1 || echo "gradle 不可用"
+            echo '```'
+            echo ""
+            echo "## Android SDK"
+            echo '```'
+            echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            ls "$ANDROID_SDK_ROOT" 2>&1 || true
+            echo "--- platforms ---"
+            ls "$ANDROID_SDK_ROOT/platforms" 2>&1 || true
+            echo "--- build-tools ---"
+            ls "$ANDROID_SDK_ROOT/build-tools" 2>&1 || true
+            echo '```'
+          } > ci-env.md
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git add ci-env.md
+          git commit -m "ci: 构建失败环境快照 [skip ci]" || true
+          git push origin HEAD:main || true
