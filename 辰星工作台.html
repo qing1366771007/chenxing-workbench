@@ -2743,9 +2743,6 @@ input { font-family:inherit; }
     <button class="nav-btn" data-module="math" onclick="switchModule('math')">
       <span class="nav-icon">🔢</span><span class="nav-label">数学</span>
     </button>
-    <button class="nav-btn" data-module="drawing" onclick="switchModule('drawing')">
-      <span class="nav-icon">🎨</span><span class="nav-label">画画</span>
-    </button>
     <button class="nav-btn" data-module="hanzi" onclick="switchModule('hanzi')">
       <span class="nav-icon">📝</span><span class="nav-label">汉字</span>
     </button>
@@ -3035,37 +3032,6 @@ input { font-family:inherit; }
               <button class="tab-item" onclick="newReadNumProblem()">🔄 下一题</button>
               <button class="tab-item" onclick="speakReadNumAnswer()">🔊 听读法</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== 画板 ===== -->
-    <div id="module-drawing" class="module-screen">
-      <div class="module-header"><span class="mh-icon">🎨</span><span class="mh-title">画形状</span></div>
-      <div class="module-body">
-        <div class="draw-canvas-wrap"><canvas id="drawCanvas"></canvas></div>
-        <div class="draw-tools">
-          <div class="draw-colors" id="drawColors"></div>
-          <div class="draw-sizes">
-            <div class="draw-size" onclick="setBrushSize(3,this)"><div class="dot" style="width:5px;height:5px;"></div></div>
-            <div class="draw-size active" onclick="setBrushSize(6,this)"><div class="dot" style="width:9px;height:9px;"></div></div>
-            <div class="draw-size" onclick="setBrushSize(12,this)"><div class="dot" style="width:15px;height:15px;"></div></div>
-            <div class="draw-size" onclick="setBrushSize(24,this)"><div class="dot" style="width:20px;height:20px;"></div></div>
-          </div>
-          <div class="draw-actions">
-            <button class="draw-action-btn" style="background:#ff7675" onclick="clearDraw()">🗑️ 清空</button>
-            <button class="draw-action-btn" style="background:var(--star-purple)" onclick="saveDraw()">💾 保存</button>
-            <button class="draw-action-btn" style="background:var(--star-teal)" onclick="setEraser()">🧽 橡皮</button>
-          </div>
-        </div>
-        <div class="draw-templates">
-          <div class="section-title">参考模板（点击描画）</div>
-          <div class="draw-tpl-grid" id="drawTplGrid"></div>
-          <div class="draw-guide-box" id="drawGuideBox">
-            <div class="draw-guide-title" id="drawGuideTitle"></div>
-            <div class="draw-guide-steps" id="drawGuideSteps"></div>
-            <div class="draw-guide-hint" id="drawGuideHint"></div>
           </div>
         </div>
       </div>
@@ -4371,7 +4337,6 @@ function switchModule(module) {
   if (navBtn) navBtn.classList.add('active');
   document.getElementById('mainArea').scrollTop = 0;
 
-  if (module === 'drawing') setTimeout(() => initDrawing(), 100);
   if (module === 'think') initThink();
   if (module === 'quiz') initQuiz();
   if (module === 'engquiz') initEngQuiz();
@@ -4886,7 +4851,6 @@ const modulesInfo = [
   { id: 'english', icon: '🌍', name: '英语练习', desc: '单词·对话·听力测试', color: 'var(--star-blue)' },
   { id: 'pinyin', icon: '🔤', name: '拼音学习', desc: '声母韵母·写字', color: 'var(--star-green)' },
   { id: 'math', icon: '🔢', name: '数学练习', desc: '加减法·比大小', color: 'var(--star-orange)' },
-  { id: 'drawing', icon: '🎨', name: '画形状', desc: '涂鸦·描形状', color: 'var(--star-pink)' },
   { id: 'hanzi', icon: '📝', name: '汉字认识', desc: '常用字·写字', color: 'var(--star-purple)' },
   { id: 'think', icon: '🧠', name: '思维练习', desc: '11种题型·无限出题', color: 'var(--star-teal)' },
   { id: 'poem', icon: '📜', name: '古诗词', desc: '古诗诵读·拼音', color: 'var(--star-gold)' },
@@ -13683,9 +13647,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('resize', () => {
-  if (document.getElementById('module-drawing').classList.contains('active')) {
-    setTimeout(() => initDrawing(), 200);
-  }
   if (document.getElementById('module-pinyin').classList.contains('active') && pyCurrentChar) {
     initWriteCanvas('pyWriteCanvas', pyCurrentChar.p, '#d4f5e0');
   }
@@ -19997,9 +19958,6 @@ input { font-family:inherit; }
     <button class="nav-btn" data-module="math" onclick="switchModule('math')">
       <span class="nav-icon">🔢</span><span class="nav-label">数学</span>
     </button>
-    <button class="nav-btn" data-module="drawing" onclick="switchModule('drawing')">
-      <span class="nav-icon">🎨</span><span class="nav-label">画画</span>
-    </button>
     <button class="nav-btn" data-module="hanzi" onclick="switchModule('hanzi')">
       <span class="nav-icon">📝</span><span class="nav-label">汉字</span>
     </button>
@@ -20238,37 +20196,6 @@ input { font-family:inherit; }
               <button class="num-btn ok" onclick="mathMulInput('ok')">✓</button>
               <button class="num-btn next" onclick="newMathMulProblem()">下一题 ➡️</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== 画板 ===== -->
-    <div id="module-drawing" class="module-screen">
-      <div class="module-header"><span class="mh-icon">🎨</span><span class="mh-title">画形状</span></div>
-      <div class="module-body">
-        <div class="draw-canvas-wrap"><canvas id="drawCanvas"></canvas></div>
-        <div class="draw-tools">
-          <div class="draw-colors" id="drawColors"></div>
-          <div class="draw-sizes">
-            <div class="draw-size" onclick="setBrushSize(3,this)"><div class="dot" style="width:5px;height:5px;"></div></div>
-            <div class="draw-size active" onclick="setBrushSize(6,this)"><div class="dot" style="width:9px;height:9px;"></div></div>
-            <div class="draw-size" onclick="setBrushSize(12,this)"><div class="dot" style="width:15px;height:15px;"></div></div>
-            <div class="draw-size" onclick="setBrushSize(24,this)"><div class="dot" style="width:20px;height:20px;"></div></div>
-          </div>
-          <div class="draw-actions">
-            <button class="draw-action-btn" style="background:#ff7675" onclick="clearDraw()">🗑️ 清空</button>
-            <button class="draw-action-btn" style="background:var(--star-purple)" onclick="saveDraw()">💾 保存</button>
-            <button class="draw-action-btn" style="background:var(--star-teal)" onclick="setEraser()">🧽 橡皮</button>
-          </div>
-        </div>
-        <div class="draw-templates">
-          <div class="section-title">参考模板（点击描画）</div>
-          <div class="draw-tpl-grid" id="drawTplGrid"></div>
-          <div class="draw-guide-box" id="drawGuideBox">
-            <div class="draw-guide-title" id="drawGuideTitle"></div>
-            <div class="draw-guide-steps" id="drawGuideSteps"></div>
-            <div class="draw-guide-hint" id="drawGuideHint"></div>
           </div>
         </div>
       </div>
@@ -21180,7 +21107,6 @@ function switchModule(module) {
   if (navBtn) navBtn.classList.add('active');
   document.getElementById('mainArea').scrollTop = 0;
 
-  if (module === 'drawing') setTimeout(() => initDrawing(), 100);
   if (module === 'think') initThink();
   if (module === 'quiz') initQuiz();
   if (module === 'engquiz') initEngQuiz();
@@ -21692,7 +21618,6 @@ const modulesInfo = [
   { id: 'english', icon: '🌍', name: '英语练习', desc: '单词·对话·听力测试', color: 'var(--star-blue)' },
   { id: 'pinyin', icon: '🔤', name: '拼音学习', desc: '声母韵母·写字', color: 'var(--star-green)' },
   { id: 'math', icon: '🔢', name: '数学练习', desc: '加减法·比大小', color: 'var(--star-orange)' },
-  { id: 'drawing', icon: '🎨', name: '画形状', desc: '涂鸦·描形状', color: 'var(--star-pink)' },
   { id: 'hanzi', icon: '📝', name: '汉字认识', desc: '常用字·写字', color: 'var(--star-purple)' },
   { id: 'think', icon: '🧠', name: '思维练习', desc: '11种题型·无限出题', color: 'var(--star-teal)' },
   { id: 'poem', icon: '📜', name: '古诗词', desc: '古诗诵读·拼音', color: 'var(--star-gold)' },
@@ -30242,9 +30167,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('resize', () => {
-  if (document.getElementById('module-drawing').classList.contains('active')) {
-    setTimeout(() => initDrawing(), 200);
-  }
   if (document.getElementById('module-pinyin').classList.contains('active') && pyCurrentChar) {
     initWriteCanvas('pyWriteCanvas', pyCurrentChar.p, '#d4f5e0');
   }
