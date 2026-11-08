@@ -1,5 +1,5 @@
 // 辰星工作台 Service Worker
-const CACHE_NAME = 'chenxing-workbench-v1';
+const CACHE_NAME = 'chenxing-workbench-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -50,7 +50,25 @@ self.addEventListener('fetch', function(event) {
     return;
   }
   
-  // 静态资源：缓存优先，网络更新
+  // 页面请求：网络优先，保证App总能拿到最新版；断网才用缓存
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request).then(function(response) {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(event.request, clone);
+          });
+        }
+        return response;
+      }).catch(function() {
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  // 其他静态资源（图片等）：缓存优先，网络更新
   event.respondWith(
     caches.match(event.request).then(function(cached) {
       const networkFetch = fetch(event.request).then(function(response) {
@@ -65,7 +83,7 @@ self.addEventListener('fetch', function(event) {
       }).catch(function() {
         return cached;
       });
-      
+
       return cached || networkFetch;
     })
   );
