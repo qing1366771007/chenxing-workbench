@@ -8,6 +8,10 @@ on:
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
+# 允许发布 Release（写 contents 权限）
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,8 +33,30 @@ jobs:
         run: gradle assembleDebug
         working-directory: apk_app
 
-      - name: Upload APK
+      # 统一成英文文件名，Release 下载链接干净、手机识别正常
+      - name: Rename APK
+        run: cp apk_app/app/build/outputs/apk/debug/app-debug.apk chenxing-workbench.apk
+
+      - name: Upload APK (Actions 产物，保留 90 天)
         uses: actions/upload-artifact@v4
         with:
           name: chenxing-workbench-apk
-          path: apk_app/app/build/outputs/apk/debug/*.apk
+          path: chenxing-workbench.apk
+
+      # 固定 tag = apk-latest，每次覆盖同一个 Release 的安装包
+      # 固定下载链接：
+      # https://github.com/qing1366771007/chenxing-workbench/releases/download/apk-latest/chenxing-workbench.apk
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: 辰星工作台 APK 最新版
+          body: |
+            自动构建 · commit ${{ github.sha }}
+            构建时间：${{ github.event.head_commit.timestamp || github.run_id }}
+
+            手机点下方 chenxing-workbench.apk 直接下载安装。
+          files: chenxing-workbench.apk
+          make_latest: true
+          draft: false
+          prerelease: false
