@@ -26,9 +26,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 用 runner 预装的 Gradle，避开 setup-gradle 下载 distribution 失败
-      - name: Show Gradle version
-        run: gradle --version
+      # runner 自带的 Gradle 版本太新，AGP 8.1 要求 8.x → 手动装 8.3
+      - name: Install Gradle 8.3
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o gradle.zip https://services.gradle.org/distributions/gradle-8.3-bin.zip
+          unzip -q gradle.zip
+          echo "$RUNNER_TEMP/gradle-8.3/bin" >> "$GITHUB_PATH"
+
+      - name: Gradle & Android SDK info
+        run: |
+          gradle --version
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_SDK_ROOT" 2>/dev/null || echo "SDK 目录不存在"
 
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
