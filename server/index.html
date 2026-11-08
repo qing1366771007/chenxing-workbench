@@ -743,6 +743,36 @@ input { font-family:inherit; }
 .hz-detail-row { display:flex; align-items:baseline; gap:6px; margin-bottom:6px; font-size:14px; }
 .hz-detail-row .label { color:var(--text-light); min-width:56px; flex-shrink:0; }
 .hz-detail-row .value { color:var(--text-dark); }
+/* ===== 📚 洪恩1300字 ===== */
+.hz-hg-panel { margin-top:4px; }
+.hz-hg-nav { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.hz-hg-btn { flex:0 0 auto; border:none; background:#fff; color:var(--star-purple,#8b5cf6); font-size:13px; font-weight:700; padding:8px 11px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer; }
+.hz-hg-btn:active { transform:scale(.96); }
+.hz-hg-label { flex:1; text-align:center; font-size:14px; font-weight:700; color:var(--text-dark,#333); cursor:pointer; }
+.hz-hg-stat { text-align:center; font-size:13px; color:var(--text-light,#999); margin-bottom:10px; }
+.hz-hg-stat b { color:var(--star-orange,#f39c12); font-size:17px; margin:0 1px; }
+.hz-hg-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.hz-hg-card { position:relative; display:flex; align-items:center; justify-content:center; padding:12px 0 10px; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer; border:2px solid transparent; transition:transform .12s; }
+.hz-hg-card:active { transform:scale(.94); }
+.hz-hg-card.known { background:linear-gradient(135deg,#eafff6,#c8f7e2); border-color:#2ecc71; }
+.hz-hg-card.picked { border-color:var(--star-purple,#8b5cf6); box-shadow:0 0 0 3px rgba(139,92,246,.18); }
+.hz-hg-ch { font-size:30px; font-weight:800; color:var(--text-dark,#333); line-height:1.1; }
+.hz-hg-card.known .hz-hg-ch { color:#0f8a4d; }
+.hz-hg-badge { position:absolute; top:1px; right:5px; font-size:11px; font-weight:800; color:#2ecc71; }
+.hz-hg-badge.off { color:#e0e0e0; }
+.hz-hg-big { margin-top:14px; background:#fff; border-radius:16px; padding:14px 14px 16px; box-shadow:0 4px 14px rgba(0,0,0,.07); text-align:center; }
+.hz-hg-bigchar { font-size:76px; font-weight:800; color:var(--star-purple,#8b5cf6); line-height:1.05; }
+.hz-hg-acts { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+.hz-hg-act { border:none; border-radius:10px; padding:10px 15px; font-size:14px; font-weight:700; color:#fff; cursor:pointer; }
+.hz-hg-act:active { transform:scale(.96); }
+.hz-hg-act.ok { background:linear-gradient(135deg,#55efc4,#00b894); }
+.hz-hg-act.no { background:linear-gradient(135deg,#ffb3b3,#ff7675); }
+.hz-hg-act.spk { background:linear-gradient(135deg,#74b9ff,#0984e3); }
+@media (max-width:420px) {
+  .hz-hg-ch { font-size:26px; }
+  .hz-hg-bigchar { font-size:64px; }
+  .hz-hg-act { padding:10px 12px; font-size:13px; }
+}
 
 /* ========== 思维模块 ========== */
 #module-think .module-header { background:rgba(0,206,201,0.9); color:#fff; }
@@ -1601,7 +1631,7 @@ input { font-family:inherit; }
 }
 .surname-row {
   display:flex; align-items:center; gap:12px; background:#fff;
-  border-radius:12px; padding:14px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  border-radius:12px; padding:10px 16px; box-shadow:0 2px 6px rgba(0,0,0,0.05);
   border-left:4px solid #c084fc; transition:all .2s; cursor:pointer;
 }
 .surname-row:hover { transform:translateX(4px); box-shadow:0 4px 12px rgba(192,132,252,0.2); }
@@ -1613,8 +1643,8 @@ input { font-family:inherit; }
   font-size:13px; font-weight:700; color:#c084fc; min-width:28px;
 }
 .surname-chars {
-  font-size:20px; font-weight:700; color:var(--text-dark); letter-spacing:4px;
-  flex:1; line-height:1.5;
+  font-size:18px; font-weight:700; color:var(--text-dark); letter-spacing:2px;
+  flex:1; line-height:1.25;
 }
 .surname-pinyin {
   font-size:12px; color:var(--text-light); letter-spacing:2px; margin-top:2px;
@@ -1623,9 +1653,13 @@ input { font-family:inherit; }
   font-size:18px; color:#c084fc; flex-shrink:0;
 }
 @media (max-width:480px) {
-  .surname-chars { font-size:18px; letter-spacing:3px; }
-  .surname-row { padding:12px 14px; }
+  .surname-chars { font-size:17px; letter-spacing:1px; }
+  .surname-row { padding:9px 12px; }
 }
+@media (min-width:760px) {
+  .surname-chars { font-size:22px; letter-spacing:5px; }
+}
+
 
 /* ========== 人体奥秘模块 ========== */
 #module-body .module-header { background:rgba(72,169,255,0.9); color:#fff; }
@@ -3136,6 +3170,23 @@ input { font-family:inherit; }
       <div class="module-body">
         <div class="tab-bar" id="hzTabs"></div>
         <div class="card-grid-3" id="hzGrid"></div>
+        <div class="hz-hg-panel" id="hzHgPanel" style="display:none;">
+          <div class="hz-hg-nav">
+            <button class="hz-hg-btn" onclick="hzHgPrev()">‹ 上一组</button>
+            <span class="hz-hg-label" id="hzHgLabel" onclick="hzHgJump()">第 1 / 130 组</span>
+            <button class="hz-hg-btn" onclick="hzHgNext()">下一组 ›</button>
+          </div>
+          <div class="hz-hg-stat">已认识 <b id="hzHgKnownCnt">0</b> / <span id="hzHgTotal">1300</span> 个字 · <span id="hzHgGroupStat">本组 0/10</span></div>
+          <div class="hz-hg-grid" id="hzHgGrid"></div>
+          <div class="hz-hg-big">
+            <div class="hz-hg-bigchar" id="hzHgBigChar">—</div>
+            <div class="hz-hg-acts">
+              <button class="hz-hg-act spk" onclick="hzHgSpeak()">🔊 读一读</button>
+              <button class="hz-hg-act ok" onclick="hzHgMark(1)">✅ 认识</button>
+              <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
+            </div>
+          </div>
+        </div>
         <div class="hz-detail-section" id="hzDetail">
           <div class="hz-detail-char" id="hzDetailChar"></div>
           <div class="hz-detail-info">
@@ -7828,10 +7879,7 @@ function renderSurnames() {
   surnameData.forEach(function(item, idx) {
     html += '<div class="surname-row" id="surnameRow' + idx + '" onclick="readOneSurname(' + idx + ')">' +
       '<span class="surname-num">' + item.num + '</span>' +
-      '<div class="surname-chars">' +
-        '<div>' + item.chars + '</div>' +
-        '<div class="surname-pinyin">' + item.pinyin + '</div>' +
-      '</div>' +
+      '<div class="surname-chars">' + item.chars + '</div>' +
       '<span class="surname-icon">🔊</span>' +
       '</div>';
   });
@@ -18929,6 +18977,36 @@ input { font-family:inherit; }
 .hz-detail-row { display:flex; align-items:baseline; gap:6px; margin-bottom:6px; font-size:14px; }
 .hz-detail-row .label { color:var(--text-light); min-width:56px; flex-shrink:0; }
 .hz-detail-row .value { color:var(--text-dark); }
+/* ===== 📚 洪恩1300字 ===== */
+.hz-hg-panel { margin-top:4px; }
+.hz-hg-nav { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.hz-hg-btn { flex:0 0 auto; border:none; background:#fff; color:var(--star-purple,#8b5cf6); font-size:13px; font-weight:700; padding:8px 11px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer; }
+.hz-hg-btn:active { transform:scale(.96); }
+.hz-hg-label { flex:1; text-align:center; font-size:14px; font-weight:700; color:var(--text-dark,#333); cursor:pointer; }
+.hz-hg-stat { text-align:center; font-size:13px; color:var(--text-light,#999); margin-bottom:10px; }
+.hz-hg-stat b { color:var(--star-orange,#f39c12); font-size:17px; margin:0 1px; }
+.hz-hg-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.hz-hg-card { position:relative; display:flex; align-items:center; justify-content:center; padding:12px 0 10px; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer; border:2px solid transparent; transition:transform .12s; }
+.hz-hg-card:active { transform:scale(.94); }
+.hz-hg-card.known { background:linear-gradient(135deg,#eafff6,#c8f7e2); border-color:#2ecc71; }
+.hz-hg-card.picked { border-color:var(--star-purple,#8b5cf6); box-shadow:0 0 0 3px rgba(139,92,246,.18); }
+.hz-hg-ch { font-size:30px; font-weight:800; color:var(--text-dark,#333); line-height:1.1; }
+.hz-hg-card.known .hz-hg-ch { color:#0f8a4d; }
+.hz-hg-badge { position:absolute; top:1px; right:5px; font-size:11px; font-weight:800; color:#2ecc71; }
+.hz-hg-badge.off { color:#e0e0e0; }
+.hz-hg-big { margin-top:14px; background:#fff; border-radius:16px; padding:14px 14px 16px; box-shadow:0 4px 14px rgba(0,0,0,.07); text-align:center; }
+.hz-hg-bigchar { font-size:76px; font-weight:800; color:var(--star-purple,#8b5cf6); line-height:1.05; }
+.hz-hg-acts { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+.hz-hg-act { border:none; border-radius:10px; padding:10px 15px; font-size:14px; font-weight:700; color:#fff; cursor:pointer; }
+.hz-hg-act:active { transform:scale(.96); }
+.hz-hg-act.ok { background:linear-gradient(135deg,#55efc4,#00b894); }
+.hz-hg-act.no { background:linear-gradient(135deg,#ffb3b3,#ff7675); }
+.hz-hg-act.spk { background:linear-gradient(135deg,#74b9ff,#0984e3); }
+@media (max-width:420px) {
+  .hz-hg-ch { font-size:26px; }
+  .hz-hg-bigchar { font-size:64px; }
+  .hz-hg-act { padding:10px 12px; font-size:13px; }
+}
 
 /* ========== 思维模块 ========== */
 #module-think .module-header { background:rgba(0,206,201,0.9); color:#fff; }
@@ -19862,7 +19940,7 @@ input { font-family:inherit; }
 }
 .surname-row {
   display:flex; align-items:center; gap:12px; background:#fff;
-  border-radius:12px; padding:14px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  border-radius:12px; padding:10px 16px; box-shadow:0 2px 6px rgba(0,0,0,0.05);
   border-left:4px solid #c084fc; transition:all .2s; cursor:pointer;
 }
 .surname-row:hover { transform:translateX(4px); box-shadow:0 4px 12px rgba(192,132,252,0.2); }
@@ -19874,8 +19952,8 @@ input { font-family:inherit; }
   font-size:13px; font-weight:700; color:#c084fc; min-width:28px;
 }
 .surname-chars {
-  font-size:20px; font-weight:700; color:var(--text-dark); letter-spacing:4px;
-  flex:1; line-height:1.5;
+  font-size:18px; font-weight:700; color:var(--text-dark); letter-spacing:2px;
+  flex:1; line-height:1.25;
 }
 .surname-pinyin {
   font-size:12px; color:var(--text-light); letter-spacing:2px; margin-top:2px;
@@ -19884,9 +19962,13 @@ input { font-family:inherit; }
   font-size:18px; color:#c084fc; flex-shrink:0;
 }
 @media (max-width:480px) {
-  .surname-chars { font-size:18px; letter-spacing:3px; }
-  .surname-row { padding:12px 14px; }
+  .surname-chars { font-size:17px; letter-spacing:1px; }
+  .surname-row { padding:9px 12px; }
 }
+@media (min-width:760px) {
+  .surname-chars { font-size:22px; letter-spacing:5px; }
+}
+
 
 /* ========== 人体奥秘模块 ========== */
 #module-body .module-header { background:rgba(72,169,255,0.9); color:#fff; }
@@ -20985,6 +21067,23 @@ input { font-family:inherit; }
       <div class="module-body">
         <div class="tab-bar" id="hzTabs"></div>
         <div class="card-grid-3" id="hzGrid"></div>
+        <div class="hz-hg-panel" id="hzHgPanel" style="display:none;">
+          <div class="hz-hg-nav">
+            <button class="hz-hg-btn" onclick="hzHgPrev()">‹ 上一组</button>
+            <span class="hz-hg-label" id="hzHgLabel" onclick="hzHgJump()">第 1 / 130 组</span>
+            <button class="hz-hg-btn" onclick="hzHgNext()">下一组 ›</button>
+          </div>
+          <div class="hz-hg-stat">已认识 <b id="hzHgKnownCnt">0</b> / <span id="hzHgTotal">1300</span> 个字 · <span id="hzHgGroupStat">本组 0/10</span></div>
+          <div class="hz-hg-grid" id="hzHgGrid"></div>
+          <div class="hz-hg-big">
+            <div class="hz-hg-bigchar" id="hzHgBigChar">—</div>
+            <div class="hz-hg-acts">
+              <button class="hz-hg-act spk" onclick="hzHgSpeak()">🔊 读一读</button>
+              <button class="hz-hg-act ok" onclick="hzHgMark(1)">✅ 认识</button>
+              <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
+            </div>
+          </div>
+        </div>
         <div class="hz-detail-section" id="hzDetail">
           <div class="hz-detail-char" id="hzDetailChar"></div>
           <div class="hz-detail-info">
@@ -25435,10 +25534,7 @@ function renderSurnames() {
   surnameData.forEach(function(item, idx) {
     html += '<div class="surname-row" id="surnameRow' + idx + '" onclick="readOneSurname(' + idx + ')">' +
       '<span class="surname-num">' + item.num + '</span>' +
-      '<div class="surname-chars">' +
-        '<div>' + item.chars + '</div>' +
-        '<div class="surname-pinyin">' + item.pinyin + '</div>' +
-      '</div>' +
+      '<div class="surname-chars">' + item.chars + '</div>' +
       '<span class="surname-icon">🔊</span>' +
       '</div>';
   });
@@ -28924,17 +29020,317 @@ const hanzhiCategories = {
 };
 let hzCurrentCat = '数字';
 let hzCurrentChar = null;
+// ============================================================
+// 📚 洪恩识字 1300 字（2026-11-09 新增，与原有 155 字分类并列）
+// 130 组 × 10 字，顺序即洪恩教学顺序
+// ============================================================
+var HONGEN_GROUPS = [
+  "一二三个人大山上下小",
+  "雨天车开火门口月羊只",
+  "有牛水中风头田土里在",
+  "日白马手出王子儿女刀",
+  "木鸟伞鱼瓜气飞虫米云",
+  "电石了来玉去回多少问",
+  "早巴父工力不干几男坐",
+  "打四五六闪的花朵果比",
+  "午面高包文分平我连元",
+  "丁厂目见兔禾是把笑着",
+  "看会自己画好爱心也可",
+  "家爸妈这爷奶们书串球",
+  "圆形长方正角灯块冰那",
+  "弓买哪乐谢想抱竹要立",
+  "耳红色吃香穿身它发衣",
+  "他她毛朋友哥弟兄眉鼻",
+  "光星阳亮今明走兴空两",
+  "哭牙肚尾你脸黑半呀吗",
+  "七八九十又很太宝贝和",
+  "关园生公苗叶林草先岛",
+  "嘴眼睛脚腿翅膀羽体没",
+  "认识颜黄蓝绿粉青紫彩",
+  "食物尝闻味鲜苦甜什么",
+  "起运动踢足赛快慢跑步",
+  "唱歌跳舞吹号讲故事怎",
+  "帮找欢担闷急害怕惊哈",
+  "老师同学校桌椅教室课",
+  "做给操伸拉举拍抓拥扔",
+  "寒冷温暖热凉湿雾净到",
+  "都办渴喝饿饭睡觉累醒",
+  "房间帘窗户台视床被处",
+  "让对姐妹阿姨叔伯姑亲",
+  "餐盆碗筷盖袋巾杯成用",
+  "像原菜萝卜豆苹桃杏笋",
+  "扫地拖洒洗服晒收全呢",
+  "还谁商场楼街理店鞋市",
+  "病医院护士伤纱布针住",
+  "养放鸡鸭农夫猫狗鼠群",
+  "汽行交装甲机宇宙船化",
+  "当该科程航员司蹈军银",
+  "客壳救板加油修轮始离",
+  "遇别海洋流浪波潮雷乌",
+  "底虾丑斑带宫美柱矿完",
+  "挖就岩沙滩鸥瓶珠金骨",
+  "帆游冲划钓钩篮网最得",
+  "梦森植树泥春夏秋冬季",
+  "熊猴鹿虎狮狐狸狼现总",
+  "跟柳芽蚯蚓蝴蝶燕蜜蜂",
+  "民种翻浇肥施除杀如再",
+  "荷蝌蚪蛙露蜻蜓蝉声音",
+  "晨朝夕落傍晚虹霞追能",
+  "送过节铃纸烟礼蛋糕娃",
+  "滴泉溪洼江河湖清神奇",
+  "求棵根枝枯皮啄鸦松活",
+  "历期昨新年表时数字久",
+  "响听叫叹喊欠吸呼说话",
+  "坡注意路停辆道直定幸",
+  "影样边外远近左右前后",
+  "蜘蛛蚊洞丝蚂蚁蛇壁怪",
+  "队进铁站入票扶乘座位",
+  "城向南极以图东西邓为",
+  "困感卫悄应象器逃吵北",
+  "因迎知却忙投思名片国",
+  "作业息更告舍留诉赶塔",
+  "未万千领结错百然忽从",
+  "愿约忘答越尖摇往龙夜",
+  "坏低吐每破争代精团但",
+  "围吓斗改齐互重丽吧接",
+  "准备参换休灭鸣背按拿",
+  "报秀迷量陆升弯软李艘",
+  "睁相古屋攻官观首史众",
+  "劳主汗庆墙铜诗砍造祝",
+  "捉杨安藏烧真匹散捕眨",
+  "眠转京苏壮景望张雁许",
+  "诚实堆雪梅兰淡念乡初",
+  "村稻秧牧喜贴梢岁野压",
+  "扑啦格拔练选骄傲共第",
+  "仔细夸掉笔旁束脱及功",
+  "舰招岸冻沉倒候且另捡",
+  "即静题法所难深些淋积",
+  "令本尔才浮摆推闭变条",
+  "舟胖失棉妙替语言透聪",
+  "仿佛班辨非常介论脑摘",
+  "旗飘点广无坪居澡梳各",
+  "伙伴排貌搭谷满母至世",
+  "霜肉颗采取玩算照纯耍",
+  "趣懂捧寸习合记阴情必",
+  "顾归件孩专渐泪整请惜",
+  "尊界读桥句短轰复童双",
+  "轻泼躺柔龄赞虚垂展勾",
+  "速度铅灰亿已巨查蚜经",
+  "驶绝引亚吾忠环技保术",
+  "敌寻消志夺于终凤凰禅",
+  "隐使纺织披灵仍池吞而",
+  "际管规府议莲宽级之列",
+  "战命枪突丢咬夹质式助",
+  "漂泊漫刚糟假钢将俩哇",
+  "贫饱饥族孙祖密炉冈牢",
+  "容易死特希其弹扮哨并",
+  "芬芳栽独弱拐治阵寿宜",
+  "股写枫柏坛何杜鹃茂井",
+  "埋刨腰蹲由迈信恩探须",
+  "计需绕稀指哄概粒微册",
+  "钟敬割宣席申架搬建梁",
+  "泞岭趴砸骗末锋迹冒沟",
+  "勇敢荡滚涌跃借尺稠啊",
+  "解杆蹦闹宁靠与提嘻优",
+  "砖辉煌瓦琴示周份您显",
+  "躲艳巧摸隔薄秤刘华吴",
+  "迟怦鼓尽牵弄挂便盼曲",
+  "乎央次胡顺利稳粗戏熟",
+  "纷烁补哗止娘丰克棋称",
+  "刻导缸断脆折斤革单挑",
+  "唤帜托卖乱钉省伟尤创",
+  "区层丹州郊激斜抽嫌懒",
+  "顶徐尘慌永切碰够盏线",
+  "醉印灾含汪荣宿福抬竿",
+  "洁艺睛朗品浅盛纹产陈",
+  "赢胜良沿丛厚富涛扎扁",
+  "英雄贺峡川扬奔碧部劲",
+  "甩拦降胆踪决刺汤茶粽",
+  "察扇猛萤贵评钱孔掌虽",
+  "刷擦皂遍检暑旅晶杉桦",
+  "裙脖臂镜鬼据反戴详猜",
+  "梧桐疆桂桑麦雀塘幅锦",
+  "泡姓氏邻龟性瓢炸甘舌",
+  "毁淹守曹玲傻善扛窝粮",
+  "翠拨咕咚掰炮端绳偏鞭",
+  "萍严幼义迁支孤凝锻炼",
+  "词爬酷棍具通耐鹰翔辛"
+];
+var HZ_HG_TAB = '📚 洪恩1300字';
+var HZ_HG_TOTAL = 1300;
+var _hzHgMode = false;
+var _hzHgGroup = 0;
+var _hzHgPickIdx = -1;
+var _hzHgKnownMap = null;
+
+function hzHgCharAt(gi) {
+  var g = Math.floor(gi / 10), i = gi % 10;
+  var s = HONGEN_GROUPS[g];
+  return s ? s.charAt(i) : '';
+}
+
+// 已知字：优先读 cx_checkin.hongenKnown（下标数组）；
+// 老数据只有 hongen=N → 按洪恩顺序把前 N 个当已认识，保证打卡页数字延续
+function hzHgKnown() {
+  if (_hzHgKnownMap) return _hzHgKnownMap;
+  var d = {}, m = {};
+  try { d = getCheckinData() || {}; } catch (e) { d = {}; }
+  if (Array.isArray(d.hongenKnown)) {
+    d.hongenKnown.forEach(function (i) { m[i] = 1; });
+  } else {
+    var n = Math.max(0, Math.min(HZ_HG_TOTAL, Number(d.hongen) || 0));
+    for (var i = 0; i < n; i++) m[i] = 1;
+  }
+  _hzHgKnownMap = m;
+  return m;
+}
+
+function hzHgCount() {
+  var m = hzHgKnown(), c = 0;
+  for (var k in m) { if (m[k]) c++; }
+  return c;
+}
+
+function hzHgSave() {
+  var m = hzHgKnown(), arr = [];
+  for (var k in m) { if (m[k]) arr.push(Number(k)); }
+  arr.sort(function (a, b) { return a - b; });
+  var d = {}, today = getTodayStr();
+  try { d = getCheckinData() || {}; } catch (e) { d = {}; }
+  d.hongenKnown = arr;
+  d.hongen = arr.length;
+  if (!d[today]) d[today] = { habits: {}, hongen: arr.length };
+  d[today].hongen = arr.length;
+  saveCheckinData(d);
+  try { renderHongen(d); } catch (e) {}
+}
+
+function hzHgStat() {
+  var t = document.getElementById('hzHgTotal');
+  if (t) t.textContent = HZ_HG_TOTAL;
+  var k = document.getElementById('hzHgKnownCnt');
+  if (k) k.textContent = hzHgCount();
+  var gs = document.getElementById('hzHgGroupStat');
+  if (gs) {
+    var m = hzHgKnown(), c = 0;
+    for (var i = 0; i < 10; i++) { if (m[_hzHgGroup * 10 + i]) c++; }
+    gs.textContent = '本组 ' + c + '/10';
+  }
+}
+
+function hzHgRender() {
+  var g = _hzHgGroup;
+  var s = HONGEN_GROUPS[g] || '';
+  var m = hzHgKnown();
+  var lb = document.getElementById('hzHgLabel');
+  if (lb) lb.textContent = '第 ' + (g + 1) + ' / ' + HONGEN_GROUPS.length + ' 组';
+  var grid = document.getElementById('hzHgGrid');
+  if (grid) {
+    grid.innerHTML = '';
+    for (var i = 0; i < s.length; i++) {
+      var gi = g * 10 + i;
+      var card = document.createElement('div');
+      card.className = 'hz-hg-card' + (m[gi] ? ' known' : '') + (gi === _hzHgPickIdx ? ' picked' : '');
+      card.innerHTML = '<span class="hz-hg-ch">' + s.charAt(i) + '</span>' +
+        '<span class="hz-hg-badge' + (m[gi] ? '' : ' off') + '">' + (m[gi] ? '✓' : '?') + '</span>';
+      (function (idx) { card.onclick = function () { hzHgPick(idx); }; })(gi);
+      grid.appendChild(card);
+    }
+  }
+  hzHgStat();
+}
+
+function hzHgPick(gi) {
+  if (gi < 0 || gi >= HZ_HG_TOTAL) return;
+  _hzHgPickIdx = gi;
+  var ch = hzHgCharAt(gi);
+  hzCurrentChar = { c: ch };          // 让旧的 speakHzCurrent() 也能读
+  var big = document.getElementById('hzHgBigChar');
+  if (big) big.textContent = ch;
+  hzHgRender();
+  speakZh(ch);
+}
+
+function hzHgSpeak() {
+  if (_hzHgPickIdx < 0) { alert('先点一个字'); return; }
+  speakZh(hzHgCharAt(_hzHgPickIdx));
+}
+
+function hzHgMark(known) {
+  if (_hzHgPickIdx < 0) { alert('先点一个字，再标认识/不认识'); return; }
+  var m = hzHgKnown();
+  if (known) { m[_hzHgPickIdx] = 1; } else { delete m[_hzHgPickIdx]; }
+  hzHgSave();
+  hzHgRender();
+  if (known) hzHgAdvance();
+}
+
+// 标「认识」后自动跳下一个字（跨组自动翻）
+function hzHgAdvance() {
+  var gi = _hzHgPickIdx + 1;
+  if (gi >= HZ_HG_TOTAL) return;
+  if (gi % 10 === 0) { _hzHgGroup = Math.floor(gi / 10); hzHgRender(); }
+  setTimeout(function () { hzHgPick(gi); }, 280);
+}
+
+function hzHgPrev() {
+  if (_hzHgGroup > 0) { _hzHgGroup--; hzHgRender(); }
+}
+
+function hzHgNext() {
+  if (_hzHgGroup < HONGEN_GROUPS.length - 1) { _hzHgGroup++; hzHgRender(); }
+}
+
+function hzHgJump() {
+  var v = prompt('跳到第几组？（1 - ' + HONGEN_GROUPS.length + '）', String(_hzHgGroup + 1));
+  if (v === null) return;
+  var n = parseInt(v, 10);
+  if (isNaN(n)) return;
+  n = Math.max(1, Math.min(HONGEN_GROUPS.length, n));
+  _hzHgGroup = n - 1;
+  hzHgRender();
+}
+
+function hzHgEnter() {
+  _hzHgMode = true;
+  _hzHgPickIdx = -1;
+  var big = document.getElementById('hzHgBigChar');
+  if (big) big.textContent = '—';
+  // 自动定位到第一个还没认识的字所在组
+  var m = hzHgKnown(), first = -1;
+  for (var i = 0; i < HZ_HG_TOTAL; i++) { if (!m[i]) { first = i; break; } }
+  _hzHgGroup = first >= 0 ? Math.floor(first / 10) : 0;
+  initHanzi();
+}
+
 function initHanzi() {
   const tabs = document.getElementById('hzTabs');
   tabs.innerHTML = '';
+  const th = document.createElement('div');
+  th.className = 'tab-item hz-hg-tab' + (_hzHgMode ? ' active' : '');
+  th.textContent = HZ_HG_TAB;
+  th.onclick = () => { hzHgEnter(); };
+  tabs.appendChild(th);
   Object.keys(hanzhiCategories).forEach(cat => {
     const t = document.createElement('div');
-    t.className = 'tab-item' + (cat === hzCurrentCat ? ' active' : '');
+    t.className = 'tab-item' + (!_hzHgMode && cat === hzCurrentCat ? ' active' : '');
     t.textContent = cat;
-    t.onclick = () => { hzCurrentCat = cat; initHanzi(); };
+    t.onclick = () => { _hzHgMode = false; hzCurrentCat = cat; initHanzi(); };
     tabs.appendChild(t);
   });
   const grid = document.getElementById('hzGrid');
+  const panel = document.getElementById('hzHgPanel');
+  if (_hzHgMode) {
+    grid.style.display = 'none';
+    grid.innerHTML = '';
+    if (panel) panel.style.display = 'block';
+    const det = document.getElementById('hzDetail');
+    if (det) det.classList.remove('show');
+    hzHgRender();
+    return;
+  }
+  if (panel) panel.style.display = 'none';
+  grid.style.display = '';
   grid.innerHTML = '';
   hanzhiCategories[hzCurrentCat].forEach(item => {
     const d = document.createElement('div');
@@ -28945,6 +29341,7 @@ function initHanzi() {
     grid.appendChild(d);
   });
 }
+
 function showHanzi(item) {
   hzCurrentChar = item;
   document.querySelectorAll('.hz-card').forEach(c => c.classList.remove('selected'));
