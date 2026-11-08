@@ -347,28 +347,35 @@ input { font-family:inherit; }
   color:#fff;
   box-shadow:0 4px 14px rgba(91,155,239,0.38);
 }
-.eng-word-list { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.eng-word-list {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+  margin-bottom:16px;
+}
 .eng-word-card {
   position:relative; overflow:hidden;
-  background:#fff; border-radius:16px; padding:14px 12px 14px 19px;
+  background:#fff; border-radius:14px; padding:11px 10px 10px 14px;
   box-shadow:0 4px 14px rgba(0,0,0,0.07);
-  cursor:pointer; display:flex; align-items:center; gap:11px;
+  cursor:pointer; display:flex; flex-direction:column; align-items:flex-start;
   transition:transform .15s, box-shadow .15s;
   -webkit-tap-highlight-color:transparent;
+  min-height:92px;
 }
 .eng-word-card::before {
-  content:''; position:absolute; left:0; top:0; bottom:0; width:5px;
+  content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
   background:linear-gradient(180deg,#5b9bef,#9ecbf9);
 }
-.eng-word-card:active { transform:scale(0.985); box-shadow:0 2px 10px rgba(0,0,0,0.06); }
-.eng-word-emoji { font-size:36px; flex-shrink:0; width:44px; text-align:center; line-height:1; }
-.eng-word-body { flex:1; min-width:0; }
-.eng-word-en { font-size:19px; font-weight:800; color:#20232a; line-height:1.3; letter-spacing:.1px; word-break:break-word; }
-.eng-word-zh { font-size:13.5px; color:#8a8f98; margin-top:4px; line-height:1.35; }
+.eng-word-card:active { transform:scale(0.975); box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+.eng-word-emoji { font-size:27px; line-height:1; margin-bottom:7px; }
+.eng-word-body { width:100%; flex:1; min-width:0; }
+.eng-word-en { font-size:15.5px; font-weight:800; color:#20232a; line-height:1.25; letter-spacing:.1px; word-break:break-word; }
+.eng-word-zh { font-size:12px; color:#8a8f98; margin-top:3px; line-height:1.3; }
 .eng-word-play {
-  flex-shrink:0; width:35px; height:35px; border-radius:50%;
+  position:absolute; right:7px; top:7px;
+  width:24px; height:24px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  background:#f4f6f9; font-size:16px;
+  background:#f4f6f9; font-size:11px;
   box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 .eng-card {
