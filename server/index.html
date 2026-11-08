@@ -2478,7 +2478,7 @@ input { font-family:inherit; }
 .login-overlay {
   position: fixed; top:0; left:0; right:0; bottom:0; z-index:9999;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  display: flex; align-items: center; justify-content: center;
+  display: none; align-items: center; justify-content: center;
   animation: loginFadeIn .5s ease;
 }
 @keyframes loginFadeIn { from{opacity:0;} to{opacity:1;} }
@@ -2807,9 +2807,7 @@ input { font-family:inherit; }
     <button class="nav-btn" data-module="unit" onclick="switchModule('unit')">
       <span class="nav-icon">🔄</span><span class="nav-label">单位换算</span>
     </button>
-    <button class="nav-btn" data-module="origami" onclick="switchModule('origami')">
-      <span class="nav-icon">📄</span><span class="nav-label">折纸</span>
-    </button>
+    <button class="nav-user-logout" onclick="showParentLogin()" title="家长登录" style="margin: 0 4px 0 8px;">🔑</button>
     <div class="nav-user" id="navUser" style="display:none;">
       <div class="nav-user-avatar" id="navUserAvatar">👦</div>
       <div class="nav-user-info">
@@ -31291,6 +31289,7 @@ function readPoem() {
 // 初始化
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+  if (checkCloudAvailable()) silentBackgroundLogin();
   renderOverview();
   initEnglish();
   renderPinyin();
@@ -35106,6 +35105,291 @@ function readUnit() {
   if (u.tip) text += '小知识：' + u.tip + '。';
   text += '生活中的例子：' + u.examples + '。';
   speakZh(text);
+}
+
+// ============================================================
+
+// ============================================================
+// 登录与云同步（后台静默完成，不显示登录页）
+// ============================================================
+var CLOUD_API = 'https://chenxing-workbench.onrender.com/api';
+var currentUser = null;
+var CLOUD_ENABLED = false;
+var selectedAvatar = '👦';
+
+function checkCloudAvailable() {
+  return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+}
+
+function api(url, options) {
+  options = options || {};
+  var token = localStorage.getItem('cx_token');
+  var headers = options.headers || {};
+  headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+
+  return fetch(CLOUD_API + url, {
+    method: options.method || 'GET',
+    headers: headers,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  }).then(function(res) {
+    return res.json().then(function(data) {
+      if (res.status === 401) {
+        doLogout(true);
+        throw new Error(data.error || '登录已过期');
+      }
+      if (!res.ok) throw new Error(data.error || '请求失败');
+      return data;
+    });
+  });
+}
+
+// 页面加载后静默登录辰星账号，失败30秒后自动重试
+function silentBackgroundLogin() {
+  var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+  if (saved['辰星'] && saved['辰星'].token) {
+    localStorage.setItem('cx_token', saved['辰星'].token);
+    api('/user').then(function(data) {
+      currentUser = data.user;
+      onLoginSuccess();
+    }).catch(function() {
+      silentLoginOrRegister();
+    });
+    return;
+  }
+  silentLoginOrRegister();
+}
+
+function silentLoginOrRegister() {
+  api('/login', { method: 'POST', body: { username: '辰星', password: 'chenxing123' } })
+    .then(function(data) { silentSaveAndEnter(data); })
+    .catch(function() {
+      api('/register', { method: 'POST', body: { username: '辰星', password: 'chenxing123', role: 'child' } })
+        .then(function(data) { silentSaveAndEnter(data); })
+        .catch(function() {
+          setTimeout(silentBackgroundLogin, 30000);
+        });
+    });
+}
+
+function silentSaveAndEnter(data) {
+  localStorage.setItem('cx_token', data.token);
+  var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+  saved['辰星'] = { token: data.token, user: data.user };
+  localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
+  currentUser = data.user;
+  onLoginSuccess();
+}
+
+function onLoginSuccess() {
+  CLOUD_ENABLED = true;
+  document.getElementById('loginOverlay').style.display = 'none';
+
+  var navUserEl = document.getElementById('navUser');
+  if (navUserEl) {
+    navUserEl.style.display = 'flex';
+    document.getElementById('navUserAvatar').textContent = currentUser.avatar || '👦';
+    document.getElementById('navUserName').textContent = currentUser.nickname || currentUser.username;
+    document.getElementById('navUserRole').textContent = currentUser.role === 'parent' ? '家长' : '孩子';
+  }
+
+  var pnc = document.getElementById('parentNavCat');
+  var pnb = document.getElementById('parentNavBtn');
+  if (currentUser.role === 'parent') {
+    if (pnc) pnc.style.display = 'block';
+    if (pnb) pnb.style.display = 'flex';
+    if (navUserEl) {
+      navUserEl.style.background = 'linear-gradient(135deg,#ff6b6b,#ee5a24)';
+      navUserEl.style.color = '#fff';
+    }
+    setTimeout(function() { switchModule('parent'); }, 300);
+  } else {
+    if (pnc) pnc.style.display = 'none';
+    if (pnb) pnb.style.display = 'none';
+    if (navUserEl) {
+      navUserEl.style.background = '';
+      navUserEl.style.color = '';
+    }
+  }
+
+  syncFromCloud();
+  syncLocalToCloud();
+}
+
+function doLogout(silent) {
+  localStorage.removeItem('cx_token');
+  currentUser = null;
+  CLOUD_ENABLED = false;
+  var nu = document.getElementById('navUser');
+  if (nu) nu.style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'none';
+  if (!silent && checkCloudAvailable()) {
+    setTimeout(silentBackgroundLogin, 1500);
+  }
+}
+
+// 家长登录入口（导航栏🔑按钮）
+function showParentLogin() {
+  document.getElementById('accountSelector').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  var u = document.getElementById('loginUsername');
+  if (u) u.focus();
+}
+
+function showPasswordLogin() { showParentLogin(); }
+
+function showAccountSelector() {
+  document.getElementById('loginOverlay').style.display = 'none';
+}
+
+function switchLoginTab(tab) {
+  if (tab === 'login') {
+    showParentLogin();
+  } else {
+    document.getElementById('accountSelector').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+}
+
+function doLogin() {
+  var username = document.getElementById('loginUsername').value.trim();
+  var password = document.getElementById('loginPassword').value;
+  var errorEl = document.getElementById('loginError');
+  var btn = document.querySelector('#loginForm .login-btn');
+
+  if (!username || !password) {
+    errorEl.textContent = '请输入用户名和密码';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  errorEl.textContent = '';
+
+  api('/login', { method: 'POST', body: { username: username, password: password } })
+    .then(function(data) {
+      localStorage.setItem('cx_token', data.token);
+      var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
+      saved[username] = { token: data.token, user: data.user };
+      localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
+      currentUser = data.user;
+      onLoginSuccess();
+    })
+    .catch(function(e) {
+      errorEl.textContent = e.message;
+      btn.disabled = false;
+      btn.textContent = '登 录';
+    });
+}
+
+function quickLogin(type) {
+  silentBackgroundLogin();
+}
+
+function doRegister() {
+  var username = document.getElementById('regUsername').value.trim();
+  var password = document.getElementById('regPassword').value;
+  var nicknameEl = document.getElementById('regNickname');
+  var nickname = nicknameEl ? nicknameEl.value.trim() : '';
+  var roleRadio = document.querySelector('input[name="regRole"]:checked');
+  var role = roleRadio ? roleRadio.value : 'child';
+  var errorEl = document.getElementById('registerError');
+  var btn = document.querySelector('#registerForm .login-btn');
+
+  if (!username || !password) {
+    errorEl.textContent = '请输入用户名和密码';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '注册中...';
+  errorEl.textContent = '';
+
+  api('/register', {
+    method: 'POST',
+    body: {
+      username: username,
+      password: password,
+      nickname: nickname || username,
+      avatar: selectedAvatar,
+      role: role
+    }
+  })
+    .then(function(data) {
+      localStorage.setItem('cx_token', data.token);
+      currentUser = data.user;
+      onLoginSuccess();
+    })
+    .catch(function(e) {
+      errorEl.textContent = e.message;
+      btn.disabled = false;
+      btn.textContent = '注 册';
+    });
+}
+
+// 本地数据同步到云端（合并，星星取多的）
+function syncLocalToCloud() {
+  if (!CLOUD_ENABLED || !currentUser) return;
+
+  var localData = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var key = localStorage.key(i);
+    if (key && key.startsWith('cx_')) {
+      var val = localStorage.getItem(key);
+      try {
+        localData[key] = JSON.parse(val);
+      } catch (e) {
+        localData[key] = val;
+      }
+    }
+  }
+
+  if (Object.keys(localData).length === 0) return;
+
+  api('/data/batch/sync', {
+    method: 'POST',
+    body: localData
+  }).then(function(data) {
+    console.log('本地数据已同步到云端，合并了', data.merged, '项');
+    syncFromCloud();
+  }).catch(function(e) {
+    console.warn('本地数据同步失败:', e.message);
+  });
+}
+
+// 从云端同步数据到本地
+function syncFromCloud() {
+  if (!CLOUD_ENABLED || !currentUser) return;
+
+  api('/data').then(function(data) {
+    Object.keys(data).forEach(function(key) {
+      var item = data[key];
+      if (item && item.value !== undefined && item.value !== null) {
+        if (typeof item.value === 'object') {
+          localStorage.setItem(key, JSON.stringify(item.value));
+        } else {
+          localStorage.setItem(key, String(item.value));
+        }
+      }
+    });
+    refreshAllModulesData();
+  }).catch(function(e) {
+    console.warn('云端同步失败:', e.message);
+  });
+}
+
+function refreshAllModulesData() {
+  totalStars = parseInt(localStorage.getItem('cx_stars') || '0');
+  if (typeof updateTotalStars === 'function') updateTotalStars();
+  var el = document.getElementById('totalStars');
+  if (el) el.textContent = totalStars;
+  var hs = document.getElementById('homeStars');
+  if (hs) hs.textContent = totalStars;
+  if (typeof renderOverview === 'function') renderOverview();
 }
 
 // ============================================================
