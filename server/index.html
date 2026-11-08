@@ -4825,19 +4825,21 @@ function speakSlow(text, lang) {
   if (text.length > 200) text = text.substring(0, 200);
 
   // 在 Android App 里用原生TTS慢速
-  if (window.AndroidTTS && window.AndroidTTS.speak) {
+  // 新版 APK 有原生慢速接口，优先用（音质最好、离线可用）
+  if (window.AndroidTTS && window.AndroidTTS.speakSlow) {
     if (!lang.startsWith('en')) {
       try {
-        window.AndroidTTS.speak(text, 'zh');
+        window.AndroidTTS.speakSlow(text, 'zh');
         return;
       } catch(e) {}
     }
   }
+  // 老版 APK 的 speak() 语速锁死 1.0，降不了速 → 不走它，落到下面百度 TTS 的 spd=2
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
   // 慢速：spd=5 比默认的3更慢（百度TTS值越大越慢）
   if (lang.startsWith('en')) {
-    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=5';
+    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=2';
   } else {
     var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
       '&text=' + encodeURIComponent(text) + '&spd=5&source=web';
@@ -4878,7 +4880,7 @@ function _speakSynthesisSlow(text, lang) {
   if ('speechSynthesis' in window) {
     var u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
-    u.rate = 0.7; // 慢速
+    u.rate = 0.6; // 慢速
     speechSynthesis.speak(u);
   }
 }
@@ -8217,7 +8219,7 @@ function renderHormones() {
 function speakHormone(idx) {
   if (idx < 0 || idx >= bodyHormones.length) return;
   var item = bodyHormones[idx];
-  speakZh(item.name + '。' + item.desc);
+  speakZhSlow(item.name + '。' + item.desc);
 }
 function renderBodyOrgans() {
   var g = document.getElementById('organGrid');
@@ -8233,7 +8235,7 @@ function renderBodyOrgans() {
 function speakBodyOrgan2(idx) {
   if (idx < 0 || idx >= bodyOrgans.length) return;
   var o = bodyOrgans[idx];
-  speakZh(o.n + '。' + o.f);
+  speakZhSlow(o.n + '。' + o.f);
 }
 function renderEnergyChart() {
   var c = document.getElementById('energyChart');
@@ -8285,7 +8287,7 @@ function speakNutrient(si, ni) {
   var s = sections[si];
   if (ni < 0 || ni >= s.data.length) return;
   var n = s.data[ni];
-  speakZh(n.n + '。' + n.a + '。' + n.f);
+  speakZhSlow(n.n + '。' + n.a + '。' + n.f);
 }
 
 // ============================================================
@@ -22092,17 +22094,19 @@ function speakSlow(text, lang) {
   if (!text) return;
   if (text.length > 200) text = text.substring(0, 200);
 
-  if (window.AndroidTTS && window.AndroidTTS.speak) {
+  // 新版 APK 有原生慢速接口，优先用（音质最好、离线可用）
+  if (window.AndroidTTS && window.AndroidTTS.speakSlow) {
     if (!lang.startsWith('en')) {
       try {
-        window.AndroidTTS.speak(text, 'zh');
+        window.AndroidTTS.speakSlow(text, 'zh');
         return;
       } catch(e) {}
     }
   }
+  // 老版 APK 的 speak() 语速锁死 1.0，降不了速 → 不走它，落到下面百度 TTS 的 spd=2
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
-  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=5';
+  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=2';
 
   var player = _getTTSPlayer();
   var bar = _getTTSBar();
@@ -22139,7 +22143,7 @@ function _speakSynthesisSlow(text, lang) {
   if ('speechSynthesis' in window) {
     var u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
-    u.rate = 0.7;
+    u.rate = 0.6;
     speechSynthesis.speak(u);
   }
 }
@@ -25861,7 +25865,7 @@ function renderHormones() {
 function speakHormone(idx) {
   if (idx < 0 || idx >= bodyHormones.length) return;
   var item = bodyHormones[idx];
-  speakZh(item.name + '。' + item.desc);
+  speakZhSlow(item.name + '。' + item.desc);
 }
 function renderBodyOrgans() {
   var g = document.getElementById('organGrid');
@@ -25877,7 +25881,7 @@ function renderBodyOrgans() {
 function speakBodyOrgan2(idx) {
   if (idx < 0 || idx >= bodyOrgans.length) return;
   var o = bodyOrgans[idx];
-  speakZh(o.n + '。' + o.f);
+  speakZhSlow(o.n + '。' + o.f);
 }
 function renderEnergyChart() {
   var c = document.getElementById('energyChart');
@@ -25929,7 +25933,7 @@ function speakNutrient(si, ni) {
   var s = sections[si];
   if (ni < 0 || ni >= s.data.length) return;
   var n = s.data[ni];
-  speakZh(n.n + '。' + n.a + '。' + n.f);
+  speakZhSlow(n.n + '。' + n.a + '。' + n.f);
 }
 
 // ============================================================

@@ -53,12 +53,24 @@ public class MainActivity extends AppCompatActivity {
         webView.addJavascriptInterface(new Object() {
             @JavascriptInterface
             public void speak(String text, String lang) {
+                speakWithRate(text, lang, 1.0f);
+            }
+
+            // 慢速朗读：给小朋友听，0.7 倍速
+            @JavascriptInterface
+            public void speakSlow(String text, String lang) {
+                speakWithRate(text, lang, 0.7f);
+            }
+
+            private void speakWithRate(String text, String lang, float rate) {
                 if (tts != null && text != null && !text.isEmpty()) {
                     if ("en".equals(lang)) {
                         tts.setLanguage(Locale.ENGLISH);
                     } else {
                         tts.setLanguage(Locale.CHINESE);
                     }
+                    // setSpeechRate 是持久设置，每次都要显式设定，避免慢速串到其它模块
+                    tts.setSpeechRate(rate);
                     tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "cx_tts");
                 }
             }
