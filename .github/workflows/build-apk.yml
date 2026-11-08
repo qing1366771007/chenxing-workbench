@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 # 显式声明权限时，未列出的权限会被置为 none
-# setup-gradle 读写缓存需要 actions: write，写汇总需要 checks: write
 permissions:
   contents: write
   actions: write
@@ -27,13 +26,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.3'
+      # 用 runner 预装的 Gradle，避开 setup-gradle 下载 distribution 失败
+      - name: Show Gradle version
+        run: gradle --version
 
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --no-daemon --stacktrace
         working-directory: apk_app
 
       # 统一成英文文件名，Release 下载链接干净、手机识别正常
