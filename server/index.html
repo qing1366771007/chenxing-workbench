@@ -2841,6 +2841,54 @@ input { font-family:inherit; }
       <div class="overview-grid" id="overviewGrid"></div>
     </div>
 
+    <!-- ===== 每日打卡 ===== -->
+    <div id="module-checkin" class="module-screen">
+      <div class="module-header"><span class="mh-icon">✅</span><span class="mh-title">每日打卡</span></div>
+      <div class="module-body">
+        <div class="section-title">
+          🌟 今日习惯
+          <button class="tab-item" onclick="toggleHabitEdit()" style="float:right;font-size:12px;padding:4px 10px;">✏️ 编辑</button>
+        </div>
+        <div id="habitList" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;"></div>
+
+        <!-- 添加习惯弹窗 -->
+        <div id="addHabitPopup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+          <div class="content-card" style="width:90%;max-width:320px;padding:20px;">
+            <div style="font-size:18px;font-weight:700;margin-bottom:16px;">添加新习惯</div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:13px;color:var(--text-light);margin-bottom:6px;">习惯名字</div>
+              <input type="text" id="newHabitName" placeholder="比如：喝水" style="width:100%;padding:10px;border:2px solid #eee;border-radius:8px;font-size:15px;box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="font-size:13px;color:var(--text-light);margin-bottom:6px;">选个图标</div>
+              <div id="habitIconPicker" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;"></div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button class="tab-item" onclick="closeAddHabitPopup()" style="flex:1;">取消</button>
+              <button class="tab-item" onclick="saveNewHabit()" style="flex:1;background:var(--star-orange);color:#fff;border:none;">保存</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">📚 洪恩识字进度</div>
+        <div class="content-card" style="text-align:center;padding:20px;">
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:8px;">今天学到第</div>
+          <div style="font-size:48px;font-weight:800;color:var(--star-orange);margin-bottom:8px;" id="hongenCount">0</div>
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:16px;">个字</div>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button class="tab-item" onclick="changeHongenCount(-10)" style="background:#ffeaa7;color:#d63031;font-size:18px;padding:10px 16px;">-10</button>
+            <button class="tab-item" onclick="changeHongenCount(-1)" style="background:#ffeaa7;color:#d63031;font-size:18px;padding:10px 16px;">-1</button>
+            <button class="tab-item" onclick="changeHongenCount(1)" style="background:#55efc4;color:#00b894;font-size:18px;padding:10px 16px;">+1</button>
+            <button class="tab-item" onclick="changeHongenCount(10)" style="background:#55efc4;color:#00b894;font-size:18px;padding:10px 16px;">+10</button>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;text-align:center;">
+          <div style="font-size:13px;color:var(--text-light);">连续打卡 <span id="streakDays" style="font-size:20px;font-weight:700;color:var(--star-orange);">0</span> 天 🔥</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== 英语 ===== -->
     <!-- ===== 英语句子 ===== -->
     <div id="module-engsentence" class="module-screen">
@@ -3975,7 +4023,7 @@ g k h j q x zh ch sh</textarea>
   <button class="tts-close-btn" onclick="hideTTSPlayer()">✕</button>
 </div>
 
-<script>
+<script type="text/legacy">
 // ============================================================
 // 云端同步配置
 // ============================================================
@@ -4612,6 +4660,7 @@ function switchModule(module) {
   if (module === 'unit') initUnit();
   if (module === 'origami') initOrigami();
   if (module === 'home') renderOverview();
+  if (module === 'checkin') initCheckin();
   if (module === 'math') { if (mathTab !== 'calc') switchMathTab(mathTab, null); }
 }
 
@@ -4670,13 +4719,8 @@ function speak(text, lang) {
   }
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
-  // 英语统一走服务器代理，绕过百度防盗链
-  if (lang.startsWith('en')) {
-    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
-  } else {
-    var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
-      '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
-  }
+  // 全部走服务器代理，绕过百度防盗链
+  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
 
   var player = _getTTSPlayer();
   var bar = _getTTSBar();
@@ -4717,6 +4761,72 @@ function speak(text, lang) {
     bar.classList.remove('show');
     _speakSynthesis(text, lang);
   };
+}
+
+// 慢速朗读（给小朋友听的，语速更慢）
+function speakSlow(text, lang) {
+  if (!text) return;
+  text = String(text).trim();
+  if (!text) return;
+  if (text.length > 200) text = text.substring(0, 200);
+
+  // 在 Android App 里用原生TTS慢速
+  if (window.AndroidTTS && window.AndroidTTS.speak) {
+    if (!lang.startsWith('en')) {
+      try {
+        window.AndroidTTS.speak(text, 'zh');
+        return;
+      } catch(e) {}
+    }
+  }
+
+  var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
+  // 慢速：spd=5 比默认的3更慢（百度TTS值越大越慢）
+  if (lang.startsWith('en')) {
+    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=5';
+  } else {
+    var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
+      '&text=' + encodeURIComponent(text) + '&spd=5&source=web';
+  }
+
+  var player = _getTTSPlayer();
+  var bar = _getTTSBar();
+  var label = _getTTSLabel();
+  if (!player || !bar) return;
+
+  if (label) label.textContent = text.length > 12 ? text.substring(0, 12) + '...' : text;
+  bar.classList.add('show');
+  player.src = url;
+  player.load();
+  var playPromise = player.play();
+  if (playPromise && playPromise.catch) {
+    playPromise.catch(function(e) {
+      bar.classList.remove('show');
+      _speakSynthesisSlow(text, lang);
+    });
+  }
+  if (window._baiduTTSTimer) { clearTimeout(window._baiduTTSTimer); }
+  window._baiduTTSTimer = setTimeout(function() {
+    var p = _getTTSPlayer();
+    if (p && (p.readyState < 2 || p.paused)) {
+      bar.classList.remove('show');
+      _speakSynthesisSlow(text, lang);
+    }
+  }, 5000);
+  player.onerror = function() {
+    if (window._baiduTTSTimer) { clearTimeout(window._baiduTTSTimer); }
+    bar.classList.remove('show');
+    _speakSynthesisSlow(text, lang);
+  };
+}
+
+function _speakSynthesisSlow(text, lang) {
+  if ('speechSynthesis' in window) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = 0.7; // 慢速
+    speechSynthesis.speak(u);
+  }
 }
 
 // ============================================================
@@ -4825,6 +4935,7 @@ document.addEventListener('click', _onFirstInteraction);
 
 function speakEn(text) { speak(text, 'en-US'); }
 function speakZh(text) { speak(text, 'zh-CN'); }
+function speakZhSlow(text) { speakSlow(text, 'zh-CN'); }
 
 // 英语朗读：先读英文，再读中文翻译
 function speakEnWithZh(en, zh) {
@@ -4850,9 +4961,8 @@ function speakEnWithZh(en, zh) {
     if (window._enZhTimer) { clearTimeout(window._enZhTimer); window._enZhTimer = null; }
     if (!zh) { setTimeout(function() { bar.classList.remove('show'); }, 500); return; }
 
-    // 尝试百度TTS播放中文
-    var zhUrl = 'https://fanyi.baidu.com/gettts?lan=zh' +
-      '&text=' + encodeURIComponent(zh) + '&spd=3&source=web';
+    // 中文走服务器代理
+    var zhUrl = '/api/tts?lang=zh&text=' + encodeURIComponent(zh) + '&spd=3';
     if (label) label.textContent = zh.length > 12 ? zh.substring(0, 12) + '...' : zh;
     player.onended = null;
     player.onerror = null;
@@ -5116,6 +5226,7 @@ function clearWrite(canvasId) {
 const modulesInfo = [
   { id: 'engsentence', icon: '💬', name: '英语句子', desc: '日常句子·即点即读', color: '#fd79a8' },
   { id: 'english', icon: '🌍', name: '英语练习', desc: '单词·对话·听力测试', color: 'var(--star-blue)' },
+  { id: 'checkin', icon: '✅', name: '每日打卡', desc: '习惯打卡·识字进度', color: '#ff9ff3' },
   { id: 'pinyin', icon: '🔤', name: '拼音学习', desc: '声母韵母·写字', color: 'var(--star-green)' },
   { id: 'math', icon: '🔢', name: '数学练习', desc: '加减法·比大小', color: 'var(--star-orange)' },
   { id: 'drawing', icon: '🎨', name: '画形状', desc: '涂鸦·描形状', color: 'var(--star-pink)' },
@@ -5139,7 +5250,6 @@ const modulesInfo = [
   { id: 'story', icon: '📖', name: '识字故事', desc: '30篇·分级阅读', color: '#f0932b' },
   { id: 'shapes', icon: '📐', name: '认识图形', desc: '图形·边长·周长·面积', color: '#6C5CE7' },
   { id: 'unit', icon: '🔄', name: '单位换算', desc: '长度·重量·时间·面积', color: '#fd79a8' },
-  { id: 'origami', icon: '📄', name: '折纸教程', desc: '14种折纸·步骤图解', color: '#ff6b6b' },
 ];
 function renderOverview() {
   const grid = document.getElementById('overviewGrid');
@@ -8033,13 +8143,13 @@ function speakBodyBrain(idx) {
     b.style.borderRadius = '4px';
   });
   var text = o.name + '。' + o.func;
-  speakZh(text);
+  speakZhSlow(text);
   setTimeout(function(){
     document.querySelectorAll('.body-hotspot[data-idx="' + idx + '"]').forEach(function(b){
       b.style.background = 'rgba(255,255,255,0.7)';
       b.style.color = '#0984e3';
     });
-  }, 2000);
+  }, 3000);
 }
 function speakBodyBone(idx) {
   var bones = window._bodyBonesTTS;
@@ -8902,6 +9012,212 @@ function switchPyTab(tab, el) {
   renderPinyin();
 }
 function speakPyCurrent() { if (pyCurrentChar) speakZh(pyCurrentChar.eg); }
+
+// ============================================================
+// 每日打卡模块
+// ============================================================
+const defaultHabitList = [
+  { id: 'brush', name: '刷牙', icon: '🪥' },
+  { id: 'washface', name: '洗脸', icon: '🧼' },
+  { id: 'breakfast', name: '吃早饭', icon: '🍳' },
+  { id: 'study', name: '学习', icon: '📚' },
+  { id: 'exercise', name: '运动', icon: '🏃' },
+  { id: 'dinner', name: '吃晚饭', icon: '🍽️' },
+  { id: 'read', name: '读绘本', icon: '📖' },
+  { id: 'sleep', name: '按时睡觉', icon: '😴' },
+];
+
+const habitIcons = ['🪥','🧼','🍳','📚','🏃','🍽️','📖','😴','💧','🍎','🎨','🎵','🧹','🛁','✏️','🎯','🌙','☀️','🌈','⭐','❤️','🎁','🏆','🚴','🤸','🧘','🎹','🎮'];
+
+var _habitEditMode = false;
+var _selectedIcon = '⭐';
+
+function getHabitList() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('cx_habits') || '[]');
+    if (saved && saved.length > 0) return saved;
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(defaultHabitList));
+}
+
+function saveHabitList(list) {
+  localStorage.setItem('cx_habits', JSON.stringify(list));
+}
+
+function getTodayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+
+function getCheckinData() {
+  try {
+    return JSON.parse(localStorage.getItem('cx_checkin') || '{}');
+  } catch(e) {
+    return {};
+  }
+}
+
+function saveCheckinData(data) {
+  localStorage.setItem('cx_checkin', JSON.stringify(data));
+}
+
+function initCheckin() {
+  var today = getTodayStr();
+  var data = getCheckinData();
+  if (!data[today]) data[today] = { habits: {}, hongen: data.hongen || 0 };
+
+  var habitList = getHabitList();
+  // 支持两套代码：第二套优先（habitList2），第一套备用（habitList）
+  var list = document.getElementById('habitList2') || document.getElementById('habitList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (_habitEditMode) {
+    // 编辑模式：显示删除按钮 + 添加卡片
+    habitList.forEach(h => {
+      var card = document.createElement('div');
+      card.className = 'content-card';
+      card.style.cssText = 'padding:16px 12px;text-align:center;position:relative;';
+      card.innerHTML = '<div style="position:absolute;top:4px;right:4px;width:24px;height:24px;background:#ff4757;color:#fff;border-radius:50%;line-height:24px;font-size:14px;cursor:pointer;">×</div>' +
+        '<div style="font-size:32px;margin-bottom:6px;">' + h.icon + '</div>' +
+        '<div style="font-size:15px;font-weight:700;">' + h.name + '</div>';
+      card.querySelector('div').onclick = function(e) {
+        e.stopPropagation();
+        if (confirm('删除「' + h.name + '」这个习惯吗？')) {
+          deleteHabit(h.id);
+        }
+      };
+      list.appendChild(card);
+    });
+    // 添加按钮
+    var addCard = document.createElement('div');
+    addCard.className = 'content-card';
+    addCard.style.cssText = 'padding:16px 12px;text-align:center;cursor:pointer;border:2px dashed #ddd;background:#fafafa;';
+    addCard.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">➕</div>' +
+      '<div style="font-size:15px;font-weight:700;color:var(--text-light);">添加习惯</div>';
+    addCard.onclick = function() { openAddHabitPopup(); };
+    list.appendChild(addCard);
+  } else {
+    // 正常模式：打卡
+    habitList.forEach(h => {
+      var done = data[today].habits[h.id];
+      var card = document.createElement('div');
+      card.className = 'content-card';
+      card.style.cssText = 'padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;' + 
+        (done ? 'background:linear-gradient(135deg,#55efc4,#00b894);color:#fff;' : '');
+      card.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">' + h.icon + '</div>' +
+        '<div style="font-size:15px;font-weight:700;">' + h.name + '</div>' +
+        '<div style="font-size:12px;margin-top:4px;">' + (done ? '✅ 已完成' : '点我打卡') + '</div>';
+      card.onclick = function() { toggleHabit(h.id); };
+      list.appendChild(card);
+    });
+  }
+
+  // 洪恩识字数量（两套都支持）
+  var hc = document.getElementById('hongenCount2') || document.getElementById('hongenCount');
+  if (hc) hc.textContent = data.hongen || 0;
+
+  // 计算连续打卡天数（两套都支持）
+  var streak = calcStreak(data);
+  var sd = document.getElementById('streakDays2') || document.getElementById('streakDays');
+  if (sd) sd.textContent = streak;
+}
+
+function toggleHabitEdit() {
+  _habitEditMode = !_habitEditMode;
+  initCheckin();
+}
+
+function deleteHabit(id) {
+  var list = getHabitList();
+  list = list.filter(h => h.id !== id);
+  saveHabitList(list);
+  initCheckin();
+}
+
+function openAddHabitPopup() {
+  _selectedIcon = '⭐';
+  document.getElementById('newHabitName').value = '';
+  // 渲染图标选择器
+  var picker = document.getElementById('habitIconPicker');
+  picker.innerHTML = '';
+  habitIcons.forEach(icon => {
+    var btn = document.createElement('div');
+    btn.style.cssText = 'font-size:24px;text-align:center;padding:6px;cursor:pointer;border-radius:8px;' + 
+      (icon === _selectedIcon ? 'background:#ffeaa7;' : '');
+    btn.textContent = icon;
+    btn.onclick = function() {
+      _selectedIcon = icon;
+      document.querySelectorAll('#habitIconPicker > div').forEach(d => d.style.background = '');
+      btn.style.background = '#ffeaa7';
+    };
+    picker.appendChild(btn);
+  });
+  document.getElementById('addHabitPopup').style.display = 'flex';
+}
+
+function closeAddHabitPopup() {
+  document.getElementById('addHabitPopup').style.display = 'none';
+}
+
+function saveNewHabit() {
+  var name = document.getElementById('newHabitName').value.trim();
+  if (!name) {
+    alert('请输入习惯名字');
+    return;
+  }
+  var list = getHabitList();
+  var newHabit = {
+    id: 'h_' + Date.now(),
+    name: name,
+    icon: _selectedIcon
+  };
+  list.push(newHabit);
+  saveHabitList(list);
+  closeAddHabitPopup();
+  initCheckin();
+}
+
+function toggleHabit(id) {
+  var today = getTodayStr();
+  var data = getCheckinData();
+  if (!data[today]) data[today] = { habits: {}, hongen: data.hongen || 0 };
+  data[today].habits[id] = !data[today].habits[id];
+  
+  // 打卡完成给星星
+  if (data[today].habits[id]) {
+    addStars(1);
+  }
+  
+  saveCheckinData(data);
+  initCheckin();
+}
+
+function changeHongenCount(delta) {
+  var today = getTodayStr();
+  var data = getCheckinData();
+  if (!data.hongen) data.hongen = 0;
+  data.hongen = Math.max(0, data.hongen + delta);
+  if (!data[today]) data[today] = { habits: {}, hongen: data.hongen };
+  data[today].hongen = data.hongen;
+  saveCheckinData(data);
+  document.getElementById('hongenCount').textContent = data.hongen;
+}
+
+function calcStreak(data) {
+  var streak = 0;
+  var d = new Date();
+  while (true) {
+    var key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    if (data[key] && Object.values(data[key].habits).some(v => v)) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
 
 // ============================================================
 // 数学模块（扩充内容）
@@ -20490,9 +20806,6 @@ input { font-family:inherit; }
     <button class="nav-btn" data-module="unit" onclick="switchModule('unit')">
       <span class="nav-icon">🔄</span><span class="nav-label">单位换算</span>
     </button>
-    <button class="nav-btn" data-module="origami" onclick="switchModule('origami')">
-      <span class="nav-icon">📄</span><span class="nav-label">折纸</span>
-    </button>
     <div class="nav-stars">
       <span class="star-icon">⭐</span>
       <span class="star-count" id="totalStars">0</span>
@@ -20514,6 +20827,54 @@ input { font-family:inherit; }
         </div>
       </div>
       <div class="overview-grid" id="overviewGrid"></div>
+    </div>
+
+    <!-- ===== 每日打卡 ===== -->
+    <div id="module-checkin" class="module-screen">
+      <div class="module-header"><span class="mh-icon">✅</span><span class="mh-title">每日打卡</span></div>
+      <div class="module-body">
+        <div class="section-title">
+          🌟 今日习惯
+          <button class="tab-item" onclick="toggleHabitEdit()" style="float:right;font-size:12px;padding:4px 10px;">✏️ 编辑</button>
+        </div>
+        <div id="habitList2" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;"></div>
+
+        <div class="section-title">📚 洪恩识字进度</div>
+        <div class="content-card" style="text-align:center;padding:20px;">
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:8px;">今天学到第</div>
+          <div style="font-size:48px;font-weight:800;color:var(--star-orange);margin-bottom:8px;" id="hongenCount2">0</div>
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:16px;">个字</div>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button class="tab-item" onclick="changeHongenCount(-10)" style="background:#ffeaa7;color:#d63031;font-size:18px;padding:10px 16px;">-10</button>
+            <button class="tab-item" onclick="changeHongenCount(-1)" style="background:#ffeaa7;color:#d63031;font-size:18px;padding:10px 16px;">-1</button>
+            <button class="tab-item" onclick="changeHongenCount(1)" style="background:#55efc4;color:#00b894;font-size:18px;padding:10px 16px;">+1</button>
+            <button class="tab-item" onclick="changeHongenCount(10)" style="background:#55efc4;color:#00b894;font-size:18px;padding:10px 16px;">+10</button>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;text-align:center;">
+          <div style="font-size:13px;color:var(--text-light);">连续打卡 <span id="streakDays2" style="font-size:20px;font-weight:700;color:var(--star-orange);">0</span> 天 🔥</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加习惯弹窗 -->
+    <div id="addHabitPopup2" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+      <div class="content-card" style="width:90%;max-width:320px;padding:20px;">
+        <div style="font-size:18px;font-weight:700;margin-bottom:16px;">添加新习惯</div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:13px;color:var(--text-light);margin-bottom:6px;">习惯名字</div>
+          <input type="text" id="newHabitName2" placeholder="比如：喝水" style="width:100%;padding:10px;border:2px solid #eee;border-radius:8px;font-size:15px;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:13px;color:var(--text-light);margin-bottom:6px;">选个图标</div>
+          <div id="habitIconPicker2" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;"></div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="tab-item" onclick="closeAddHabitPopup2()" style="flex:1;">取消</button>
+          <button class="tab-item" onclick="saveNewHabit2()" style="flex:1;background:var(--star-orange);color:#fff;border:none;">保存</button>
+        </div>
+      </div>
     </div>
 
     <!-- ===== 英语 ===== -->
@@ -21614,6 +21975,7 @@ function switchModule(module) {
   if (module === 'unit') initUnit();
   if (module === 'origami') initOrigami();
   if (module === 'home') renderOverview();
+  if (module === 'checkin') initCheckin();
   if (module === 'math') { if (mathTab !== 'calc') switchMathTab(mathTab, null); }
 }
 
@@ -21674,13 +22036,8 @@ function speak(text, lang) {
   }
 
   var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
-  // 英语统一走服务器代理，绕过百度防盗链
-  if (lang.startsWith('en')) {
-    var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
-  } else {
-    var url = 'https://fanyi.baidu.com/gettts?lan=' + baiduLan +
-      '&text=' + encodeURIComponent(text) + '&spd=3&source=web';
-  }
+  // 全部走服务器代理，绕过百度防盗链
+  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=3';
 
   var player = _getTTSPlayer();
   var bar = _getTTSBar();
@@ -21722,6 +22079,67 @@ function speak(text, lang) {
     _speakSynthesis(text, lang);
   };
 }
+
+// 慢速朗读（给小朋友听的，语速更慢）
+function speakSlow(text, lang) {
+  if (!text) return;
+  text = String(text).trim();
+  if (!text) return;
+  if (text.length > 200) text = text.substring(0, 200);
+
+  if (window.AndroidTTS && window.AndroidTTS.speak) {
+    if (!lang.startsWith('en')) {
+      try {
+        window.AndroidTTS.speak(text, 'zh');
+        return;
+      } catch(e) {}
+    }
+  }
+
+  var baiduLan = lang.startsWith('en') ? 'en' : 'zh';
+  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(text) + '&spd=5';
+
+  var player = _getTTSPlayer();
+  var bar = _getTTSBar();
+  var label = _getTTSLabel();
+  if (!player || !bar) return;
+
+  if (label) label.textContent = text.length > 12 ? text.substring(0, 12) + '...' : text;
+  bar.classList.add('show');
+  player.src = url;
+  player.load();
+  var playPromise = player.play();
+  if (playPromise && playPromise.catch) {
+    playPromise.catch(function(e) {
+      bar.classList.remove('show');
+      _speakSynthesisSlow(text, lang);
+    });
+  }
+  if (window._baiduTTSTimer) { clearTimeout(window._baiduTTSTimer); }
+  window._baiduTTSTimer = setTimeout(function() {
+    var p = _getTTSPlayer();
+    if (p && (p.readyState < 2 || p.paused)) {
+      bar.classList.remove('show');
+      _speakSynthesisSlow(text, lang);
+    }
+  }, 5000);
+  player.onerror = function() {
+    if (window._baiduTTSTimer) { clearTimeout(window._baiduTTSTimer); }
+    bar.classList.remove('show');
+    _speakSynthesisSlow(text, lang);
+  };
+}
+
+function _speakSynthesisSlow(text, lang) {
+  if ('speechSynthesis' in window) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = 0.7;
+    speechSynthesis.speak(u);
+  }
+}
+
+function speakZhSlow(text) { speakSlow(text, 'zh-CN'); }
 
 // ============================================================
 // 音效播放（Web Audio API，不依赖网络，所有浏览器兼容）
@@ -22113,10 +22531,227 @@ function clearWrite(canvasId) {
 }
 
 // ============================================================
+// 每日打卡模块
+// ============================================================
+var _defaultHabitList = [
+  { id: 'brush', name: '刷牙', icon: '🪥' },
+  { id: 'washface', name: '洗脸', icon: '🧼' },
+  { id: 'breakfast', name: '吃早饭', icon: '🍳' },
+  { id: 'study', name: '学习', icon: '📚' },
+  { id: 'exercise', name: '运动', icon: '🏃' },
+  { id: 'dinner', name: '吃晚饭', icon: '🍽️' },
+  { id: 'read', name: '读绘本', icon: '📖' },
+  { id: 'sleep', name: '按时睡觉', icon: '😴' },
+];
+
+var _habitIconList = ['🪥','🧼','🍳','📚','🏃','🍽️','📖','😴','💧','🍎','🎨','🎵','🧹','🛁','✏️','🎯','🌙','☀️','🌈','⭐','❤️','🎁','🏆','🚴','🤸','🧘','🎹','🎮'];
+
+var _habitEditMode = false;
+var _selectedHabitIcon = '⭐';
+
+function getHabitList() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('cx_habits') || '[]');
+    if (saved && saved.length > 0) return saved;
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(_defaultHabitList));
+}
+
+function saveHabitList(list) {
+  localStorage.setItem('cx_habits', JSON.stringify(list));
+}
+
+function getTodayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+
+function getCheckinData() {
+  try {
+    return JSON.parse(localStorage.getItem('cx_checkin') || '{}');
+  } catch(e) {
+    return {};
+  }
+}
+
+function saveCheckinData(data) {
+  localStorage.setItem('cx_checkin', JSON.stringify(data));
+}
+
+function initCheckin() {
+  var today = getTodayStr();
+  var data = getCheckinData();
+  if (!data[today]) data[today] = { habits: {}, hongen: data.hongen || 0 };
+
+  var habitList = getHabitList();
+  var list = document.getElementById('habitList2');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (_habitEditMode) {
+    habitList.forEach(function(h) {
+      var card = document.createElement('div');
+      card.className = 'content-card';
+      card.style.cssText = 'padding:16px 12px;text-align:center;position:relative;';
+      var delBtn = document.createElement('div');
+      delBtn.style.cssText = 'position:absolute;top:4px;right:4px;width:24px;height:24px;background:#ff4757;color:#fff;border-radius:50%;line-height:24px;font-size:14px;cursor:pointer;';
+      delBtn.textContent = '×';
+      delBtn.onclick = function(e) {
+        e.stopPropagation();
+        if (confirm('删除「' + h.name + '」这个习惯吗？')) {
+          deleteHabit(h.id);
+        }
+      };
+      card.appendChild(delBtn);
+      var iconDiv = document.createElement('div');
+      iconDiv.style.cssText = 'font-size:32px;margin-bottom:6px;';
+      iconDiv.textContent = h.icon;
+      card.appendChild(iconDiv);
+      var nameDiv = document.createElement('div');
+      nameDiv.style.cssText = 'font-size:15px;font-weight:700;';
+      nameDiv.textContent = h.name;
+      card.appendChild(nameDiv);
+      list.appendChild(card);
+    });
+    var addCard = document.createElement('div');
+    addCard.className = 'content-card';
+    addCard.style.cssText = 'padding:16px 12px;text-align:center;cursor:pointer;border:2px dashed #ddd;background:#fafafa;';
+    addCard.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">➕</div><div style="font-size:15px;font-weight:700;color:#999;">添加习惯</div>';
+    addCard.onclick = function() { openAddHabitPopup2(); };
+    list.appendChild(addCard);
+  } else {
+    habitList.forEach(function(h) {
+      var done = data[today].habits[h.id];
+      var card = document.createElement('div');
+      card.className = 'content-card';
+      card.style.cssText = 'padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;' + 
+        (done ? 'background:linear-gradient(135deg,#55efc4,#00b894);color:#fff;' : '');
+      card.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">' + h.icon + '</div>' +
+        '<div style="font-size:15px;font-weight:700;">' + h.name + '</div>' +
+        '<div style="font-size:12px;margin-top:4px;">' + (done ? '✅ 已完成' : '点我打卡') + '</div>';
+      card.onclick = function() { toggleHabit(h.id); };
+      list.appendChild(card);
+    });
+  }
+
+  var hc = document.getElementById('hongenCount2');
+  if (hc) hc.textContent = data.hongen || 0;
+
+  var streak = calcStreak(data);
+  var sd = document.getElementById('streakDays2');
+  if (sd) sd.textContent = streak;
+}
+
+function toggleHabitEdit() {
+  _habitEditMode = !_habitEditMode;
+  initCheckin();
+}
+
+function deleteHabit(id) {
+  var list = getHabitList();
+  list = list.filter(function(h) { return h.id !== id; });
+  saveHabitList(list);
+  initCheckin();
+}
+
+function openAddHabitPopup2() {
+  _selectedHabitIcon = '⭐';
+  var nameInput = document.getElementById('newHabitName2');
+  if (nameInput) nameInput.value = '';
+  var picker = document.getElementById('habitIconPicker2');
+  if (picker) {
+    picker.innerHTML = '';
+    _habitIconList.forEach(function(icon) {
+      var btn = document.createElement('div');
+      btn.style.cssText = 'font-size:24px;text-align:center;padding:6px;cursor:pointer;border-radius:8px;' + 
+        (icon === _selectedHabitIcon ? 'background:#ffeaa7;' : '');
+      btn.textContent = icon;
+      btn.onclick = function() {
+        _selectedHabitIcon = icon;
+        var children = picker.children;
+        for (var i = 0; i < children.length; i++) {
+          children[i].style.background = '';
+        }
+        btn.style.background = '#ffeaa7';
+      };
+      picker.appendChild(btn);
+    });
+  }
+  var popup = document.getElementById('addHabitPopup2');
+  if (popup) popup.style.display = 'flex';
+}
+
+function closeAddHabitPopup2() {
+  var popup = document.getElementById('addHabitPopup2');
+  if (popup) popup.style.display = 'none';
+}
+
+function saveNewHabit2() {
+  var nameInput = document.getElementById('newHabitName2');
+  var name = nameInput ? nameInput.value.trim() : '';
+  if (!name) {
+    alert('请输入习惯名字');
+    return;
+  }
+  var list = getHabitList();
+  var newHabit = {
+    id: 'h_' + Date.now(),
+    name: name,
+    icon: _selectedHabitIcon
+  };
+  list.push(newHabit);
+  saveHabitList(list);
+  closeAddHabitPopup2();
+  initCheckin();
+}
+
+function toggleHabit(id) {
+  var today = getTodayStr();
+  var data = getCheckinData();
+  if (!data[today]) data[today] = { habits: {}, hongen: data.hongen || 0 };
+  data[today].habits[id] = !data[today].habits[id];
+  
+  if (data[today].habits[id]) {
+    addStars(1);
+  }
+  
+  saveCheckinData(data);
+  initCheckin();
+}
+
+function changeHongenCount(delta) {
+  var today = getTodayStr();
+  var data = getCheckinData();
+  if (!data.hongen) data.hongen = 0;
+  data.hongen = Math.max(0, data.hongen + delta);
+  if (!data[today]) data[today] = { habits: {}, hongen: data.hongen };
+  data[today].hongen = data.hongen;
+  saveCheckinData(data);
+  var hc = document.getElementById('hongenCount2');
+  if (hc) hc.textContent = data.hongen;
+}
+
+function calcStreak(data) {
+  var streak = 0;
+  var d = new Date();
+  while (true) {
+    var key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    if (data[key] && Object.values(data[key].habits).some(function(v) { return v; })) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+// ============================================================
 // 首页概览
 // ============================================================
-const modulesInfo = [
+var modulesInfo = [
   { id: 'english', icon: '🌍', name: '英语练习', desc: '单词·对话·听力测试', color: 'var(--star-blue)' },
+  { id: 'checkin', icon: '✅', name: '每日打卡', desc: '习惯打卡·识字进度', color: '#ff9ff3' },
   { id: 'pinyin', icon: '🔤', name: '拼音学习', desc: '声母韵母·写字', color: 'var(--star-green)' },
   { id: 'math', icon: '🔢', name: '数学练习', desc: '加减法·比大小', color: 'var(--star-orange)' },
   { id: 'drawing', icon: '🎨', name: '画形状', desc: '涂鸦·描形状', color: 'var(--star-pink)' },
@@ -22141,7 +22776,6 @@ const modulesInfo = [
   { id: 'story', icon: '📖', name: '识字故事', desc: '30篇·分级阅读', color: '#f0932b' },
   { id: 'shapes', icon: '📐', name: '认识图形', desc: '图形·边长·周长·面积', color: '#6C5CE7' },
   { id: 'unit', icon: '🔄', name: '单位换算', desc: '长度·重量·时间·面积', color: '#fd79a8' },
-  { id: 'origami', icon: '📄', name: '折纸教程', desc: '14种折纸·步骤图解', color: '#ff6b6b' },
 ];
 function renderOverview() {
   const grid = document.getElementById('overviewGrid');
@@ -22851,7 +23485,7 @@ function initEnglish() {
     if (testTitle) testTitle.style.display = 'none';
     if (testArea) testArea.style.display = 'none';
     if (dialogTitle) dialogTitle.style.display = 'none';
-    dialogsEl.style.display = 'none';
+    if (dialogsEl) dialogsEl.style.display = 'none';
     // 显示歌曲
     songTitle.style.display = '';
     songArea.style.display = '';
@@ -22893,13 +23527,13 @@ function initEnglish() {
 
   // 日常对话模式
   const convArea = document.getElementById('engConvArea');
-  if (engCurrentCat === 'conversation') {
+  if (engCurrentCat === 'conversation' && convArea) {
     // 隐藏单词、测试、对话、歌曲
     cardsEl.style.display = 'none';
     if (testTitle) testTitle.style.display = 'none';
     if (testArea) testArea.style.display = 'none';
     if (dialogTitle) dialogTitle.style.display = 'none';
-    dialogsEl.style.display = 'none';
+    if (dialogsEl) dialogsEl.style.display = 'none';
     songTitle.style.display = 'none';
     songArea.style.display = 'none';
     // 显示日常对话
@@ -22911,12 +23545,12 @@ function initEnglish() {
   // 正常模式：隐藏歌曲、日常对话
   songTitle.style.display = 'none';
   songArea.style.display = 'none';
-  convArea.style.display = 'none';
+  if (convArea) convArea.style.display = 'none';
   cardsEl.style.display = '';
   if (testTitle) testTitle.style.display = '';
   if (testArea) testArea.style.display = '';
   if (dialogTitle) dialogTitle.style.display = '';
-  dialogsEl.style.display = '';
+  if (dialogsEl) dialogsEl.style.display = '';
 
   const cards = document.getElementById('engCards');
   cards.innerHTML = '';
@@ -22928,20 +23562,22 @@ function initEnglish() {
     c.onclick = () => speakEnWithZh(item.en, item.zh);
     cards.appendChild(c);
   });
-  // 对话
+  // 对话（如果有的话）
   const dc = document.getElementById('engDialogs');
-  dc.innerHTML = '';
-  engDialogs.forEach(d => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;';
-    row.innerHTML = `<div><div style="font-size:15px;font-weight:600;">${d.en}</div><div style="font-size:13px;color:var(--text-light);">${d.zh}</div></div>`;
-    const btn = document.createElement('button');
-    btn.className = 'speak-btn';
-    btn.textContent = '🔊';
-    btn.onclick = () => speakEnWithZh(d.en, d.zh);
-    row.appendChild(btn);
-    dc.appendChild(row);
-  });
+  if (dc) {
+    dc.innerHTML = '';
+    engDialogs.forEach(d => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;';
+      row.innerHTML = `<div><div style="font-size:15px;font-weight:600;">${d.en}</div><div style="font-size:13px;color:var(--text-light);">${d.zh}</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'speak-btn';
+      btn.textContent = '🔊';
+      btn.onclick = () => speakEnWithZh(d.en, d.zh);
+      row.appendChild(btn);
+      dc.appendChild(row);
+    });
+  }
   // 初始化听力测试（每次切换分类都重新出题）
   initEngTest();
 }
@@ -24831,13 +25467,13 @@ function speakBodyBrain(idx) {
     b.style.borderRadius = '4px';
   });
   var text = o.name + '。' + o.func;
-  speakZh(text);
+  speakZhSlow(text);
   setTimeout(function(){
     document.querySelectorAll('.body-hotspot[data-idx="' + idx + '"]').forEach(function(b){
       b.style.background = 'rgba(255,255,255,0.7)';
       b.style.color = '#0984e3';
     });
-  }, 2000);
+  }, 3000);
 }
 function speakBodyBone(idx) {
   var bones = window._bodyBonesTTS;
@@ -24854,13 +25490,13 @@ function speakBodyBone(idx) {
     b.style.borderRadius = '4px';
   });
   var text = o.name + '。' + o.func;
-  speakZh(text);
+  speakZhSlow(text);
   setTimeout(function(){
     document.querySelectorAll('.body-hotspot[data-idx="' + idx + '"]').forEach(function(b){
       b.style.background = 'rgba(255,255,255,0.7)';
       b.style.color = '#0984e3';
     });
-  }, 2000);
+  }, 3000);
 }
 function speakBodyOrgan(idx) {
   var organs = window._bodyOrgansTTS;
@@ -24879,14 +25515,14 @@ function speakBodyOrgan(idx) {
   });
   // 朗读器官名+功能
   var text = o.name + '。' + o.func;
-  speakZh(text);
-  // 2秒后恢复透明
+  speakZhSlow(text);
+  // 3秒后恢复透明
   setTimeout(function(){
     document.querySelectorAll('.body-hotspot[data-idx="' + idx + '"]').forEach(function(b){
       b.style.background = 'transparent';
       b.style.color = 'transparent';
     });
-  }, 2000);
+  }, 3000);
 }
 function renderHormones() {
   var g = document.getElementById('hormoneGrid');
