@@ -2775,7 +2775,10 @@ input { font-family:inherit; }
     <button class="nav-btn active" data-module="home" onclick="switchModule('home')">
       <span class="nav-icon">🏠</span><span class="nav-label">首页</span>
     </button>
-    <div class="nav-cat">📘 基础</div>
+        <button class="nav-btn" data-module="checkin" onclick="switchModule('checkin')">
+      <span class="nav-icon">✅</span><span class="nav-label">每日打卡</span>
+    </button>
+<div class="nav-cat">📘 基础</div>
     <button class="nav-btn" data-module="engsentence" onclick="switchModule('engsentence')">
       <span class="nav-icon">💬</span><span class="nav-label">英语句子</span>
     </button>
@@ -2920,14 +2923,17 @@ input { font-family:inherit; }
 
         <div class="section-title">📚 洪恩识字进度</div>
         <div class="content-card" style="text-align:center;padding:20px;">
-          <div style="font-size:14px;color:var(--text-light);margin-bottom:8px;">今天学到第</div>
-          <div style="font-size:48px;font-weight:800;color:var(--star-orange);margin-bottom:8px;" id="hongenCount">0</div>
-          <div style="font-size:14px;color:var(--text-light);margin-bottom:16px;">个字</div>
-          <div style="display:flex;gap:12px;justify-content:center;">
-            <button class="tab-item" onclick="changeHongenCount(-10)" style="background:#ffeaa7;color:#d63031;font-size:18px;padding:10px 16px;">-10</button>
-            <button class="tab-item" onclick="changeHongenCount(-1)" style="background:#ffeaa7;color:#d63031;font-size:18px;padding:10px 16px;">-1</button>
-            <button class="tab-item" onclick="changeHongenCount(1)" style="background:#55efc4;color:#00b894;font-size:18px;padding:10px 16px;">+1</button>
-            <button class="tab-item" onclick="changeHongenCount(10)" style="background:#55efc4;color:#00b894;font-size:18px;padding:10px 16px;">+10</button>
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:6px;">已学到第</div>
+          <div style="font-size:48px;font-weight:800;color:var(--star-orange);line-height:1.1;cursor:pointer;" id="hongenCount" onclick="editHongenCount()" title="点数字可直接改成任意值">0</div>
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:12px;">/ <span id="hongenGoal">300</span> 个字 <span style="font-size:12px;color:#b2bec3;">（点数字可直接改）</span></div>
+          <div style="height:10px;background:#f1f2f6;border-radius:6px;overflow:hidden;margin:0 4px 18px;">
+            <div id="hongenBar" style="height:100%;width:0%;background:linear-gradient(90deg,#feca57,#ff9f43);border-radius:6px;transition:width .3s;"></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button class="tab-item" onclick="changeHongenCount(-10)" style="background:#ffeaa7;color:#d63031;font-size:16px;padding:10px 14px;">-10</button>
+            <button class="tab-item" onclick="changeHongenCount(-1)" style="background:#ffeaa7;color:#d63031;font-size:16px;padding:10px 14px;">-1</button>
+            <button class="tab-item" onclick="changeHongenCount(1)" style="background:#55efc4;color:#00b894;font-size:16px;padding:10px 14px;">+1</button>
+            <button class="tab-item" onclick="changeHongenCount(10)" style="background:#55efc4;color:#00b894;font-size:16px;padding:10px 14px;">+10</button>
           </div>
         </div>
 
@@ -9063,7 +9069,7 @@ function initCheckin() {
 
   var habitList = getHabitList();
   // 支持两套代码：第二套优先（habitList2），第一套备用（habitList）
-  var list = document.getElementById('habitList2') || document.getElementById('habitList');
+  var list = document.getElementById('habitList') || document.getElementById('habitList');
   if (!list) return;
   list.innerHTML = '';
 
@@ -9109,12 +9115,12 @@ function initCheckin() {
   }
 
   // 洪恩识字数量（两套都支持）
-  var hc = document.getElementById('hongenCount2') || document.getElementById('hongenCount');
+  var hc = document.getElementById('hongenCount') || document.getElementById('hongenCount');
   if (hc) hc.textContent = data.hongen || 0;
 
   // 计算连续打卡天数（两套都支持）
   var streak = calcStreak(data);
-  var sd = document.getElementById('streakDays2') || document.getElementById('streakDays');
+  var sd = document.getElementById('streakDays') || document.getElementById('streakDays');
   if (sd) sd.textContent = streak;
 }
 
@@ -20723,7 +20729,10 @@ input { font-family:inherit; }
     <button class="nav-btn active" data-module="home" onclick="switchModule('home')">
       <span class="nav-icon">🏠</span><span class="nav-label">首页</span>
     </button>
-    <div class="nav-cat">📘 基础</div>
+        <button class="nav-btn" data-module="checkin" onclick="switchModule('checkin')">
+      <span class="nav-icon">✅</span><span class="nav-label">每日打卡</span>
+    </button>
+<div class="nav-cat">📘 基础</div>
     <button class="nav-btn" data-module="english" onclick="switchModule('english')">
       <span class="nav-icon">🌍</span><span class="nav-label">英语</span>
     </button>
@@ -22580,7 +22589,7 @@ function initCheckin() {
   if (!data[today]) data[today] = { habits: {}, hongen: data.hongen || 0 };
 
   var habitList = getHabitList();
-  var list = document.getElementById('habitList2');
+  var list = document.getElementById('habitList');
   if (!list) return;
   list.innerHTML = '';
 
@@ -22630,11 +22639,10 @@ function initCheckin() {
     });
   }
 
-  var hc = document.getElementById('hongenCount2');
-  if (hc) hc.textContent = data.hongen || 0;
+  renderHongen(data);
 
   var streak = calcStreak(data);
-  var sd = document.getElementById('streakDays2');
+  var sd = document.getElementById('streakDays');
   if (sd) sd.textContent = streak;
 }
 
@@ -22652,9 +22660,9 @@ function deleteHabit(id) {
 
 function openAddHabitPopup2() {
   _selectedHabitIcon = '⭐';
-  var nameInput = document.getElementById('newHabitName2');
+  var nameInput = document.getElementById('newHabitName');
   if (nameInput) nameInput.value = '';
-  var picker = document.getElementById('habitIconPicker2');
+  var picker = document.getElementById('habitIconPicker');
   if (picker) {
     picker.innerHTML = '';
     _habitIconList.forEach(function(icon) {
@@ -22673,17 +22681,17 @@ function openAddHabitPopup2() {
       picker.appendChild(btn);
     });
   }
-  var popup = document.getElementById('addHabitPopup2');
+  var popup = document.getElementById('addHabitPopup');
   if (popup) popup.style.display = 'flex';
 }
 
 function closeAddHabitPopup2() {
-  var popup = document.getElementById('addHabitPopup2');
+  var popup = document.getElementById('addHabitPopup');
   if (popup) popup.style.display = 'none';
 }
 
 function saveNewHabit2() {
-  var nameInput = document.getElementById('newHabitName2');
+  var nameInput = document.getElementById('newHabitName');
   var name = nameInput ? nameInput.value.trim() : '';
   if (!name) {
     alert('请输入习惯名字');
@@ -22701,6 +22709,10 @@ function saveNewHabit2() {
   initCheckin();
 }
 
+// 块1 那份可见 DOM 的按钮仍用无 2 的函数名 → 别名到块2 的实现
+function closeAddHabitPopup() { closeAddHabitPopup2(); }
+function saveNewHabit() { saveNewHabit2(); }
+
 function toggleHabit(id) {
   var today = getTodayStr();
   var data = getCheckinData();
@@ -22715,16 +22727,40 @@ function toggleHabit(id) {
   initCheckin();
 }
 
-function changeHongenCount(delta) {
+var HONGEN_GOAL = 300;
+
+function renderHongen(data) {
+  var cur = Math.max(0, Math.min(HONGEN_GOAL, Number(data.hongen) || 0));
+  var hc = document.getElementById('hongenCount');
+  if (hc) hc.textContent = cur;
+  var goalEl = document.getElementById('hongenGoal');
+  if (goalEl) goalEl.textContent = HONGEN_GOAL;
+  var bar = document.getElementById('hongenBar');
+  if (bar) bar.style.width = (cur / HONGEN_GOAL * 100).toFixed(1) + '%';
+}
+
+function _setHongen(n) {
   var today = getTodayStr();
   var data = getCheckinData();
-  if (!data.hongen) data.hongen = 0;
-  data.hongen = Math.max(0, data.hongen + delta);
+  data.hongen = Math.max(0, Math.min(HONGEN_GOAL, n));
   if (!data[today]) data[today] = { habits: {}, hongen: data.hongen };
   data[today].hongen = data.hongen;
   saveCheckinData(data);
-  var hc = document.getElementById('hongenCount2');
-  if (hc) hc.textContent = data.hongen;
+  renderHongen(data);
+}
+
+function changeHongenCount(delta) {
+  var data = getCheckinData();
+  _setHongen((Number(data.hongen) || 0) + delta);
+}
+
+function editHongenCount() {
+  var data = getCheckinData();
+  var v = prompt('现在学到第几个字？（0 - ' + HONGEN_GOAL + '）', Number(data.hongen) || 0);
+  if (v === null) return;
+  var n = parseInt(v, 10);
+  if (isNaN(n)) { alert('请输入数字'); return; }
+  _setHongen(n);
 }
 
 function calcStreak(data) {
