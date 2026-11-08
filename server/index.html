@@ -290,47 +290,90 @@ input { font-family:inherit; }
 }
 
 /* ========== 英语模块 ========== */
-#module-engsentence .module-header { background:rgba(253,121,168,0.9); color:#fff; }
-.eng-sent-cat-bar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+/* ========== 英语模块（按设计稿还原：白卡片 + 左侧渐变色条 + 圆形喇叭） ========== */
+/* ---------- 英语句子（粉色主题） ---------- */
+/* ========== 英语模块（按设计稿还原：白卡片 + 左侧渐变色条 + 圆形喇叭） ========== */
+/* ---------- 英语句子（粉色主题） ---------- */
+#module-engsentence .module-header { background:linear-gradient(135deg,#ef5f96 0%,#f9a8c3 100%); color:#fff; }
+.eng-sent-cat-bar { display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap; }
 .eng-sent-cat-btn {
-  padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600;
-  background:#f0f0f0; color:#666; cursor:pointer; transition:all .2s;
+  padding:9px 17px; border-radius:20px; font-size:13.5px; font-weight:600;
+  background:#fff; color:#5b5b66; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  transition:transform .15s, box-shadow .15s, background .15s;
+  -webkit-tap-highlight-color:transparent;
 }
-.eng-sent-cat-btn.active { background:#fd79a8; color:#fff; }
+.eng-sent-cat-btn:active { transform:scale(0.96); }
+.eng-sent-cat-btn.active {
+  background:linear-gradient(135deg,#ef5f96,#f4799f);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(239,95,150,0.38);
+}
 .eng-sent-list { display:flex; flex-direction:column; gap:10px; }
 .eng-sent-card {
-  background:#fff; border-radius:14px; padding:14px 16px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.06); cursor:pointer;
-  display:flex; align-items:center; gap:12px; transition:all .15s;
-  border-left:4px solid #fd79a8;
+  position:relative; overflow:hidden;
+  background:#fff; border-radius:16px; padding:14px 12px 14px 19px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.07);
+  cursor:pointer; display:flex; align-items:center; gap:11px;
+  transition:transform .15s, box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
 }
-.eng-sent-card:active { transform:scale(0.98); background:#fff7fa; }
-.eng-sent-emoji { font-size:32px; flex-shrink:0; }
+.eng-sent-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:5px;
+  background:linear-gradient(180deg,#ef5f96,#fbb6cd);
+}
+.eng-sent-card:active { transform:scale(0.985); box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+.eng-sent-emoji { font-size:35px; flex-shrink:0; line-height:1; width:42px; text-align:center; }
 .eng-sent-body { flex:1; min-width:0; }
-.eng-sent-en { font-size:16px; font-weight:700; color:#2d3436; line-height:1.4; }
-.eng-sent-zh { font-size:13px; color:#636e72; margin-top:4px; line-height:1.4; }
-.eng-sent-play { font-size:22px; flex-shrink:0; opacity:0.7; }
-
-#module-english .module-header { background:rgba(116,185,255,0.9); color:#fff; }
-.eng-word-cat-bar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
-.eng-word-cat-btn {
-  padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600;
-  background:#f0f0f0; color:#666; cursor:pointer; transition:all .2s;
+.eng-sent-en { font-size:19px; font-weight:800; color:#20232a; line-height:1.3; letter-spacing:.1px; word-break:break-word; }
+.eng-sent-zh { font-size:13.5px; color:#8a8f98; margin-top:4px; line-height:1.35; }
+.eng-sent-play {
+  flex-shrink:0; width:35px; height:35px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:#f4f6f9; font-size:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
-.eng-word-cat-btn.active { background:#74b9ff; color:#fff; }
+
+/* ---------- 英语练习（蓝色主题） ---------- */
+#module-english .module-header { background:linear-gradient(135deg,#5b9bef 0%,#8fc4f8 100%); color:#fff; }
+.eng-word-cat-bar { display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap; }
+.eng-word-cat-btn {
+  padding:9px 17px; border-radius:20px; font-size:13.5px; font-weight:600;
+  background:#fff; color:#5b5b66; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  transition:transform .15s, box-shadow .15s, background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.eng-word-cat-btn:active { transform:scale(0.96); }
+.eng-word-cat-btn.active {
+  background:linear-gradient(135deg,#5b9bef,#7db4f5);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(91,155,239,0.38);
+}
 .eng-word-list { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
 .eng-word-card {
-  background:#fff; border-radius:14px; padding:14px 16px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.06); cursor:pointer;
-  display:flex; align-items:center; gap:12px; transition:all .15s;
-  border-left:4px solid #74b9ff;
+  position:relative; overflow:hidden;
+  background:#fff; border-radius:16px; padding:14px 12px 14px 19px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.07);
+  cursor:pointer; display:flex; align-items:center; gap:11px;
+  transition:transform .15s, box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
 }
-.eng-word-card:active { transform:scale(0.98); background:#f0f7ff; }
-.eng-word-emoji { font-size:36px; flex-shrink:0; width:48px; text-align:center; }
+.eng-word-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:5px;
+  background:linear-gradient(180deg,#5b9bef,#9ecbf9);
+}
+.eng-word-card:active { transform:scale(0.985); box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+.eng-word-emoji { font-size:36px; flex-shrink:0; width:44px; text-align:center; line-height:1; }
 .eng-word-body { flex:1; min-width:0; }
-.eng-word-en { font-size:20px; font-weight:700; color:#2d3436; line-height:1.4; }
-.eng-word-zh { font-size:14px; color:#636e72; margin-top:4px; line-height:1.4; }
-.eng-word-play { font-size:24px; flex-shrink:0; opacity:0.7; }
+.eng-word-en { font-size:19px; font-weight:800; color:#20232a; line-height:1.3; letter-spacing:.1px; word-break:break-word; }
+.eng-word-zh { font-size:13.5px; color:#8a8f98; margin-top:4px; line-height:1.35; }
+.eng-word-play {
+  flex-shrink:0; width:35px; height:35px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:#f4f6f9; font-size:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
 .eng-card {
   background:#fff;
   border-radius:var(--radius-sm);
@@ -21901,6 +21944,7 @@ function switchModule(module) {
   if (module === 'think') initThink();
   if (module === 'quiz') initQuiz();
   if (module === 'engquiz') initEngQuiz();
+  if (module === 'engsentence') initEngSentence();
   if (module === 'multable') initMulTable();
   if (module === 'idiom') initIdiom();
   if (module === 'recite') initRecite();
@@ -23398,6 +23442,290 @@ const engNumberSong = [
   { num:9, en:'Nine',  zh:'九',  emoji:'9️⃣' },
   { num:10,en:'Ten',   zh:'十',  emoji:'🔟' },
 ];
+// ===== 英语句子模块（从被停用的块1 移植，块1 带 type="text/legacy" 不会执行） =====
+let engSentCurrentCat = null;
+let engSentMode = 'card';
+let engSentConvCat = null;
+let _convPlayTimeout = null;
+const engSentenceData = {
+'句子·问候': [
+  { en: 'Hello!', zh: '你好！', emoji: '👋' },
+  { en: 'Hi!', zh: '嗨！', emoji: '👋' },
+  { en: 'Good morning!', zh: '早上好！', emoji: '🌅' },
+  { en: 'Good afternoon!', zh: '下午好！', emoji: '☀️' },
+  { en: 'Good evening!', zh: '晚上好！', emoji: '🌆' },
+  { en: 'Good night!', zh: '晚安！', emoji: '🌙' },
+  { en: 'How are you?', zh: '你好吗？', emoji: '😊' },
+  { en: "I'm fine, thank you.", zh: '我很好，谢谢你。', emoji: '👍' },
+  { en: "I'm great!", zh: '我很棒！', emoji: '🎉' },
+  { en: "I'm tired.", zh: '我累了。', emoji: '😴' },
+  { en: 'Nice to meet you!', zh: '很高兴认识你！', emoji: '🤝' },
+  { en: 'Goodbye!', zh: '再见！', emoji: '👋' },
+  { en: 'Bye bye!', zh: '拜拜！', emoji: '👋' },
+  { en: 'See you tomorrow!', zh: '明天见！', emoji: '👋' },
+  { en: 'See you later!', zh: '待会儿见！', emoji: '👋' },
+],
+'句子·礼貌用语': [
+  { en: 'Thank you!', zh: '谢谢你！', emoji: '🙏' },
+  { en: 'Thanks a lot!', zh: '非常感谢！', emoji: '🙏' },
+  { en: "You're welcome.", zh: '不客气。', emoji: '😊' },
+  { en: 'Please.', zh: '请。', emoji: '🙏' },
+  { en: 'Sorry.', zh: '对不起。', emoji: '😔' },
+  { en: "I'm sorry.", zh: '我很抱歉。', emoji: '😔' },
+  { en: "That's OK.", zh: '没关系。', emoji: '👌' },
+  { en: 'Excuse me.', zh: '打扰一下。', emoji: '🙋' },
+  { en: 'May I come in?', zh: '我可以进来吗？', emoji: '🚪' },
+  { en: 'Come in, please.', zh: '请进。', emoji: '🚪' },
+  { en: 'After you.', zh: '你先请。', emoji: '🚶' },
+  { en: 'Can you help me?', zh: '你能帮我吗？', emoji: '🆘' },
+  { en: 'Sure!', zh: '当然可以！', emoji: '👍' },
+  { en: 'No problem.', zh: '没问题。', emoji: '👌' },
+],
+'句子·家庭日常': [
+  { en: 'Wake up!', zh: '起床了！', emoji: '⏰' },
+  { en: 'Time to get up!', zh: '该起床了！', emoji: '⏰' },
+  { en: 'Good morning!', zh: '早上好！', emoji: '🌅' },
+  { en: 'Did you sleep well?', zh: '睡得好吗？', emoji: '😴' },
+  { en: "I'm home!", zh: '我回来了！', emoji: '🏠' },
+  { en: 'Welcome home!', zh: '欢迎回家！', emoji: '🏠' },
+  { en: 'Breakfast is ready!', zh: '早饭好了！', emoji: '🍳' },
+  { en: 'Lunch is ready!', zh: '午饭好了！', emoji: '🍱' },
+  { en: 'Dinner is ready!', zh: '晚饭好了！', emoji: '🍽️' },
+  { en: 'Time to eat!', zh: '该吃饭了！', emoji: '🥢' },
+  { en: "What's for dinner?", zh: '晚饭吃什么？', emoji: '🍽️' },
+  { en: "I'm hungry.", zh: '我饿了。', emoji: '🍔' },
+  { en: "I'm thirsty.", zh: '我口渴了。', emoji: '🥤' },
+  { en: "I'm full.", zh: '我饱了。', emoji: '😋' },
+  { en: 'It tastes good!', zh: '味道好极了！', emoji: '😋' },
+  { en: 'Can I have some more?', zh: '我能再要一点吗？', emoji: '🍚' },
+  { en: 'Wash your hands.', zh: '洗手。', emoji: '🧼' },
+  { en: 'Brush your teeth.', zh: '刷牙。', emoji: '🪥' },
+  { en: 'Wash your face.', zh: '洗脸。', emoji: '🧴' },
+  { en: 'Take a bath.', zh: '洗澡。', emoji: '🛁' },
+  { en: 'Get dressed.', zh: '穿衣服。', emoji: '👕' },
+  { en: 'Put on your shoes.', zh: '穿上鞋子。', emoji: '👟' },
+  { en: 'Time for bed.', zh: '该睡觉了。', emoji: '🛏️' },
+  { en: 'Sweet dreams!', zh: '做个好梦！', emoji: '💭' },
+  { en: 'I love you, Mom!', zh: '我爱你，妈妈！', emoji: '❤️' },
+  { en: 'I love you too!', zh: '我也爱你！', emoji: '❤️' },
+  { en: 'Turn on the light.', zh: '开灯。', emoji: '💡' },
+  { en: 'Turn off the light.', zh: '关灯。', emoji: '🌙' },
+  { en: 'Turn on the TV.', zh: '开电视。', emoji: '📺' },
+  { en: 'Turn off the TV.', zh: '关电视。', emoji: '📺' },
+  { en: 'Open the door.', zh: '开门。', emoji: '🚪' },
+  { en: 'Close the door.', zh: '关门。', emoji: '🚪' },
+  { en: 'Open the window.', zh: '开窗户。', emoji: '🪟' },
+  { en: 'Close the window.', zh: '关窗户。', emoji: '🪟' },
+],
+'句子·生活需求': [
+  { en: 'I want noodles.', zh: '我想吃面条。', emoji: '🍜' },
+  { en: 'I want some rice.', zh: '我想吃米饭。', emoji: '🍚' },
+  { en: 'Can I have some water?', zh: '我想喝水。', emoji: '💧' },
+  { en: 'I want milk, please.', zh: '我想喝牛奶。', emoji: '🥛' },
+  { en: 'Can I have juice?', zh: '我能喝果汁吗？', emoji: '🧃' },
+  { en: 'I want to go to the bathroom.', zh: '我想上厕所。', emoji: '🚽' },
+  { en: 'I need to pee.', zh: '我要尿尿。', emoji: '💦' },
+  { en: 'I need to poop.', zh: '我要拉粑粑。', emoji: '💩' },
+  { en: 'Can you take me to school?', zh: '送我去上学吧。', emoji: '🎒' },
+  { en: 'Can you drive me there?', zh: '你开车送我去吧。', emoji: '🚗' },
+  { en: 'Can you print this for me?', zh: '帮我打印一下。', emoji: '🖨️' },
+  { en: 'Can you help me?', zh: '你能帮我吗？', emoji: '🙋' },
+  { en: 'I need help.', zh: '我需要帮忙。', emoji: '🆘' },
+  { en: 'Can you open the door?', zh: '你能开一下门吗？', emoji: '🚪' },
+  { en: 'Can I watch TV?', zh: '我能看电视吗？', emoji: '📺' },
+  { en: 'Can I play games?', zh: '我能玩游戏吗？', emoji: '🎮' },
+  { en: 'Can I go out to play?', zh: '我能出去玩吗？', emoji: '🌳' },
+  { en: 'Can I have a snack?', zh: '我能吃零食吗？', emoji: '🍪' },
+  { en: 'Can I have some candy?', zh: '我能吃糖吗？', emoji: '🍬' },
+  { en: 'I want to read a book.', zh: '我想看书。', emoji: '📖' },
+  { en: 'Tell me a story!', zh: '给我讲个故事！', emoji: '📚' },
+  { en: 'Can we play together?', zh: '我们能一起玩吗？', emoji: '🧸' },
+  { en: 'I want to draw.', zh: '我想画画。', emoji: '🎨' },
+  { en: 'Where is my bag?', zh: '我的书包在哪？', emoji: '🎒' },
+  { en: 'I lost my pencil.', zh: '我的铅笔不见了。', emoji: '✏️' },
+  { en: 'Wait a minute.', zh: '等一下。', emoji: '⏳' },
+  { en: 'Wait for me!', zh: '等等我！', emoji: '🙋' },
+  { en: 'Hurry up!', zh: '快点！', emoji: '⚡' },
+  { en: 'Slow down.', zh: '慢点。', emoji: '🐢' },
+  { en: 'Be careful!', zh: '小心！', emoji: '⚠️' },
+  { en: 'Come here.', zh: '过来。', emoji: '👋' },
+  { en: 'Let\'s go!', zh: '走吧！', emoji: '🚶' },
+  { en: 'Give me a hug.', zh: '抱一下。', emoji: '🤗' },
+],
+'句子·学校生活': [
+  { en: "Let's go to school!", zh: '我们去上学吧！', emoji: '🎒' },
+  { en: 'Hurry up! We are late.', zh: '快点！我们要迟到了。', emoji: '⏱️' },
+  { en: 'Open your books, please.', zh: '请打开你们的书。', emoji: '📖' },
+  { en: 'Close your books.', zh: '合上你们的书。', emoji: '📕' },
+  { en: 'May I speak?', zh: '我可以发言吗？', emoji: '🙋' },
+  { en: 'Listen carefully.', zh: '认真听。', emoji: '👂' },
+  { en: "I don't understand.", zh: '我不明白。', emoji: '🤔' },
+  { en: 'Can you say that again?', zh: '你能再说一遍吗？', emoji: '🔁' },
+  { en: 'Very good!', zh: '非常好！', emoji: '👍' },
+  { en: 'Well done!', zh: '做得好！', emoji: '👏' },
+  { en: 'Try again.', zh: '再试一次。', emoji: '💪' },
+  { en: 'Class is over.', zh: '下课了。', emoji: '🔔' },
+  { en: "Let's play together!", zh: '我们一起玩吧！', emoji: '🎮' },
+  { en: 'See you at school!', zh: '学校见！', emoji: '🏫' },
+],
+'句子·表达喜好': [
+  { en: 'I like apples.', zh: '我喜欢苹果。', emoji: '🍎' },
+  { en: 'I love ice cream!', zh: '我超爱冰淇淋！', emoji: '🍦' },
+  { en: "I don't like carrots.", zh: '我不喜欢胡萝卜。', emoji: '🥕' },
+  { en: 'My favorite color is blue.', zh: '我最喜欢的颜色是蓝色。', emoji: '🔵' },
+  { en: 'What do you like?', zh: '你喜欢什么？', emoji: '❓' },
+  { en: 'I like reading books.', zh: '我喜欢读书。', emoji: '📚' },
+  { en: 'I enjoy playing football.', zh: '我喜欢踢足球。', emoji: '⚽' },
+  { en: "It's my favorite!", zh: '这是我的最爱！', emoji: '❤️' },
+  { en: 'It is delicious!', zh: '太好吃了！', emoji: '😋' },
+  { en: 'It is beautiful!', zh: '太美了！', emoji: '✨' },
+  { en: 'That sounds fun!', zh: '听起来很有趣！', emoji: '🎵' },
+  { en: 'I want to be a teacher.', zh: '我想当一名老师。', emoji: '👩‍🏫' },
+],
+'句子·询问与回答': [
+  { en: 'What is your name?', zh: '你叫什么名字？', emoji: '❓' },
+  { en: 'My name is Tom.', zh: '我叫汤姆。', emoji: '🙋' },
+  { en: 'How old are you?', zh: '你几岁了？', emoji: '🎂' },
+  { en: "I'm seven years old.", zh: '我七岁了。', emoji: '7️⃣' },
+  { en: 'Where are you from?', zh: '你来自哪里？', emoji: '🌍' },
+  { en: "I'm from China.", zh: '我来自中国。', emoji: '🇨🇳' },
+  { en: 'What time is it?', zh: '几点了？', emoji: '⏰' },
+  { en: "It's eight o'clock.", zh: '八点了。', emoji: '8️⃣' },
+  { en: "What's this?", zh: '这是什么？', emoji: '👉' },
+  { en: "It's a cat.", zh: '这是一只猫。', emoji: '🐱' },
+  { en: 'How much is it?', zh: '多少钱？', emoji: '💰' },
+  { en: 'It is five yuan.', zh: '五元。', emoji: '💴' },
+  { en: 'Whose book is this?', zh: '这是谁的书？', emoji: '📖' },
+  { en: "It's mine.", zh: '是我的。', emoji: '🙋' },
+],
+'句子·天气与季节': [
+  { en: "What's the weather like today?", zh: '今天天气怎么样？', emoji: '☀️' },
+  { en: "It's sunny today.", zh: '今天天晴。', emoji: '☀️' },
+  { en: "It's cloudy.", zh: '阴天。', emoji: '☁️' },
+  { en: "It's raining.", zh: '下雨了。', emoji: '🌧️' },
+  { en: "It's snowing!", zh: '下雪了！', emoji: '❄️' },
+  { en: "It's very hot today.", zh: '今天很热。', emoji: '🥵' },
+  { en: "It's cold outside.", zh: '外面很冷。', emoji: '🥶' },
+  { en: "It's windy.", zh: '刮风了。', emoji: '🌬️' },
+  { en: 'Spring is warm.', zh: '春天很温暖。', emoji: '🌸' },
+  { en: 'Summer is hot.', zh: '夏天很热。', emoji: '🌞' },
+  { en: 'Autumn is cool.', zh: '秋天很凉爽。', emoji: '🍁' },
+  { en: 'Winter is cold.', zh: '冬天很冷。', emoji: '⛄' },
+  { en: "Let's go to the park!", zh: '我们去公园吧！', emoji: '🌳' },
+],
+};
+function initEngSentence() {
+  const cats = Object.keys(engSentenceData);
+  if (!engSentCurrentCat) engSentCurrentCat = cats[0];
+  const bar = document.getElementById('engSentCatBar');
+  bar.innerHTML = '';
+  cats.forEach(cat => {
+    const btn = document.createElement('div');
+    btn.className = 'eng-sent-cat-btn' + (cat === engSentCurrentCat ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => { engSentCurrentCat = cat; initEngSentence(); };
+    bar.appendChild(btn);
+  });
+  const list = document.getElementById('engSentList');
+  list.innerHTML = '';
+  const items = engSentenceData[engSentCurrentCat] || [];
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'eng-sent-card';
+    card.onclick = () => speakEnWithZh(item.en, item.zh);
+    card.innerHTML =
+      '<div class="eng-sent-emoji">' + item.emoji + '</div>' +
+      '<div class="eng-sent-body">' +
+        '<div class="eng-sent-en">' + item.en + '</div>' +
+        '<div class="eng-sent-zh">' + item.zh + '</div>' +
+      '</div>' +
+      '<div class="eng-sent-play">🔊</div>';
+    list.appendChild(card);
+  });
+}
+function setEngSentMode(mode, btn) {
+  engSentMode = mode;
+  document.getElementById('engSentModeCard').classList.toggle('active', mode === 'card');
+  document.getElementById('engSentModeConv').classList.toggle('active', mode === 'conv');
+  document.getElementById('engSentCardMode').style.display = mode === 'card' ? '' : 'none';
+  document.getElementById('engSentConvMode').style.display = mode === 'conv' ? '' : 'none';
+  if (mode === 'conv') { renderEngSentConv(); }
+}
+function renderEngSentConv() {
+  const catBar = document.getElementById('engSentConvCatBar');
+  const scenesEl = document.getElementById('engSentConvScenes');
+  if (!catBar || !scenesEl) return;
+  
+  if (!engSentConvCat) engSentConvCat = engConversations[0].cat;
+  catBar.innerHTML = '';
+  engConversations.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-item' + (cat.cat === engSentConvCat ? ' active' : '');
+    btn.textContent = cat.icon + ' ' + cat.cat;
+    btn.onclick = () => { engSentConvCat = cat.cat; renderEngSentConv(); };
+    catBar.appendChild(btn);
+  });
+  
+  const catData = engConversations.find(c => c.cat === engSentConvCat);
+  if (!catData) return;
+  
+  scenesEl.innerHTML = '';
+  catData.scenes.forEach(scene => {
+    const sceneCard = document.createElement('div');
+    sceneCard.className = 'content-card';
+    sceneCard.style.marginBottom = '12px';
+    
+    const title = document.createElement('div');
+    title.style.fontWeight = '700';
+    title.style.fontSize = '16px';
+    title.style.marginBottom = '10px';
+    title.style.color = 'var(--text-dark)';
+    title.textContent = '🎭 ' + scene.title;
+    sceneCard.appendChild(title);
+    
+    scene.lines.forEach(line => {
+      const lineEl = document.createElement('div');
+      lineEl.style.padding = '8px 12px';
+      lineEl.style.marginBottom = '6px';
+      lineEl.style.borderRadius = '10px';
+      lineEl.style.background = line.role === 'Kid' || line.role === 'B' 
+        ? 'rgba(116,185,255,0.15)' 
+        : 'rgba(253,121,168,0.1)';
+      lineEl.style.cursor = 'pointer';
+      lineEl.innerHTML = 
+        '<div style="font-size:12px;color:var(--text-light);margin-bottom:2px;">' + line.role + '</div>' +
+        '<div style="font-size:15px;font-weight:600;color:var(--text-dark);">' + line.en + '</div>' +
+        '<div style="font-size:13px;color:var(--text-light);margin-top:2px;">' + line.zh + '</div>';
+      lineEl.onclick = () => speakEnWithZh(line.en, line.zh);
+      sceneCard.appendChild(lineEl);
+    });
+    
+    // 播放全部按钮
+    const playAllBtn = document.createElement('button');
+    playAllBtn.className = 'tab-item';
+    playAllBtn.style.marginTop = '8px';
+    playAllBtn.style.background = 'var(--star-blue)';
+    playAllBtn.style.color = '#fff';
+    playAllBtn.style.border = 'none';
+    playAllBtn.textContent = '🔊 播放全部';
+    playAllBtn.onclick = () => playConvSceneAll(scene);
+    sceneCard.appendChild(playAllBtn);
+    
+    scenesEl.appendChild(sceneCard);
+  });
+}
+function playConvSceneAll(scene) {
+  if (_convPlayTimeout) { clearTimeout(_convPlayTimeout); _convPlayTimeout = null; }
+  let idx = 0;
+  function playNext() {
+    if (idx >= scene.lines.length) return;
+    speakEn(scene.lines[idx].en);
+    idx++;
+    _convPlayTimeout = setTimeout(playNext, 2500);
+  }
+  playNext();
+}
+
 function initEnglish() {
   const tabs = document.getElementById('engTabs');
   tabs.innerHTML = '';
@@ -23501,9 +23829,14 @@ function initEnglish() {
   cards.innerHTML = '';
   englishData[engCurrentCat].forEach(item => {
     const c = document.createElement('div');
-    c.className = 'eng-card';
-    c.innerHTML = `<div class="emoji">${item.emoji}</div><div class="en-word">${item.en}</div><div class="zh-word">${item.zh}</div><button class="speak-btn">🔊</button>`;
-    c.querySelector('.speak-btn').onclick = (e) => { e.stopPropagation(); speakEnWithZh(item.en, item.zh); };
+    c.className = 'eng-word-card';
+    c.innerHTML =
+      '<div class="eng-word-emoji">' + item.emoji + '</div>' +
+      '<div class="eng-word-body">' +
+        '<div class="eng-word-en">' + item.en + '</div>' +
+        '<div class="eng-word-zh">' + item.zh + '</div>' +
+      '</div>' +
+      '<div class="eng-word-play">🔊</div>';
     c.onclick = () => speakEnWithZh(item.en, item.zh);
     cards.appendChild(c);
   });
