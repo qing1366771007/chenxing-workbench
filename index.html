@@ -2922,7 +2922,7 @@ input { font-family:inherit; }
         <div class="content-card" style="text-align:center;padding:20px;">
           <div style="font-size:14px;color:var(--text-light);margin-bottom:6px;">已学到第</div>
           <div style="font-size:48px;font-weight:800;color:var(--star-orange);line-height:1.1;cursor:pointer;" id="hongenCount" onclick="editHongenCount()" title="点数字可直接改成任意值">0</div>
-          <div style="font-size:14px;color:var(--text-light);margin-bottom:12px;">/ <span id="hongenGoal">300</span> 个字 <span style="font-size:12px;color:#b2bec3;">（点数字可直接改）</span></div>
+          <div style="font-size:14px;color:var(--text-light);margin-bottom:12px;">/ <span id="hongenGoal">1300</span> 个字 <span style="font-size:12px;color:#b2bec3;">（点数字可直接改）</span></div>
           <div style="height:10px;background:#f1f2f6;border-radius:6px;overflow:hidden;margin:0 4px 18px;">
             <div id="hongenBar" style="height:100%;width:0%;background:linear-gradient(90deg,#feca57,#ff9f43);border-radius:6px;transition:width .3s;"></div>
           </div>
@@ -22657,7 +22657,7 @@ function toggleHabit(id) {
   initCheckin();
 }
 
-var HONGEN_GOAL = 300;
+var HONGEN_GOAL = 1300;
 
 function renderHongen(data) {
   var cur = Math.max(0, Math.min(HONGEN_GOAL, Number(data.hongen) || 0));
@@ -25238,7 +25238,7 @@ var goalDefaultData = [
   { id: 'g13', icon: '🥢', text: '用筷子', done: false },
   { id: 'g14', icon: '🥧', text: '做蛋挞', done: false },
   { id: 'g15', icon: '👨‍👩‍👧', text: '开家庭会议', done: false },
-  { id: 'g16', icon: '📚', text: '洪恩识字260个', done: false },
+  { id: 'g16', icon: '📚', text: '洪恩识字1300字（已学300）', done: false },
 ];
 
 var goalData = [];
