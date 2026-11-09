@@ -22990,8 +22990,112 @@ function saveCheckinData(data) {
   localStorage.setItem('cx_checkin', JSON.stringify(data));
 }
 
+// ======================================================================
+// 打卡数据跟着账号走（2026-11-09）
+// ① 登录 / 换机 / 重装：打卡记录逐天合并，云端历史不会被新机器的空白冲掉
+// ② 跨天自动翻新：过了 0 点，界面自动切到新的一天，累计天数照旧保留
+// ======================================================================
+var _cxDayKey = null;
+
+function cxIsDayKey(k) {
+  return typeof k === 'string' && /^\d{4}-\d{1,2}-\d{1,2}$/.test(k);
+}
+
+// 两边逐天合并：任一侧打过勾就算打勾，识字数取大的，认识的字取并集
+function cxMergeCheckinData(localVal, cloudVal) {
+  function obj(v) {
+    if (!v) return {};
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return {}; } }
+    if (typeof v !== 'object' || v instanceof Array) return {};
+    var o = {}, k;
+    for (k in v) { if (v.hasOwnProperty(k)) o[k] = v[k]; }
+    return o;
+  }
+  var A = obj(localVal), B = obj(cloudVal), out = {}, k;
+  var dayKeys = {};
+  for (k in A) { if (A.hasOwnProperty(k) && cxIsDayKey(k)) dayKeys[k] = 1; }
+  for (k in B) { if (B.hasOwnProperty(k) && cxIsDayKey(k)) dayKeys[k] = 1; }
+  for (k in dayKeys) {
+    if (!dayKeys.hasOwnProperty(k)) continue;
+    var da = A[k] || {}, db = B[k] || {};
+    var ha = da.habits || {}, hb = db.habits || {}, h = {}, id;
+    for (id in ha) { if (ha.hasOwnProperty(id) && ha[id]) h[id] = true; }
+    for (id in hb) { if (hb.hasOwnProperty(id) && hb[id]) h[id] = true; }
+    out[k] = {
+      habits: h,
+      hongen: Math.max(Number(da.hongen) || 0, Number(db.hongen) || 0)
+    };
+  }
+  out.hongen = Math.max(Number(A.hongen) || 0, Number(B.hongen) || 0);
+  if (Array.isArray(A.hongenKnown) || Array.isArray(B.hongenKnown)) {
+    var seen = {}, arr = [];
+    function eat(list) {
+      if (!Array.isArray(list)) return;
+      list.forEach(function (i) {
+        var n = Number(i);
+        if (!isNaN(n) && !seen[n]) { seen[n] = 1; arr.push(n); }
+      });
+    }
+    eat(A.hongenKnown); eat(B.hongenKnown);
+    arr.sort(function (x, y) { return x - y; });
+    out.hongenKnown = arr;
+  } else if (B.hongenKnown !== undefined) out.hongenKnown = B.hongenKnown;
+  else if (A.hongenKnown !== undefined) out.hongenKnown = A.hongenKnown;
+  for (k in B) { if (B.hasOwnProperty(k) && !cxIsDayKey(k) && k !== 'hongen' && k !== 'hongenKnown') out[k] = B[k]; }
+  for (k in A) { if (A.hasOwnProperty(k) && !cxIsDayKey(k) && k !== 'hongen' && k !== 'hongenKnown' && !(k in out)) out[k] = A[k]; }
+  return out;
+}
+
+// 登录后统一对账：拉云端 → 与本机逐天合并 → 推回去
+function cxCloudReconcile() {
+  if (!CLOUD_ENABLED || !currentUser) return;
+  api('/data').then(function (data) {
+    var cloudVal = null, localVal = null;
+    try { cloudVal = (data && data.cx_checkin) ? data.cx_checkin.value : null; } catch (e) {}
+    try {
+      var raw = localStorage.getItem('cx_checkin');
+      localVal = raw ? JSON.parse(raw) : null;
+    } catch (e) { localVal = null; }
+    if (cloudVal || localVal) {
+      var merged = cxMergeCheckinData(localVal, cloudVal);
+      try { localStorage.setItem('cx_checkin', JSON.stringify(merged)); } catch (e) {}
+    }
+    try { _hzHgKnownMap = null; } catch (e) {}
+    syncLocalToCloud();
+  }).catch(function () {
+    var hasLocal = false;
+    try { hasLocal = !!(localStorage.getItem('cx_checkin') || localStorage.getItem('cx_stars')); } catch (e) {}
+    if (hasLocal) {
+      if (window.cxCloudFullPush) window.cxCloudFullPush();
+      else syncLocalToCloud();
+    } else {
+      syncFromCloud();
+    }
+  });
+}
+
+// 跨天自动翻新
+function cxDayKeyNow() {
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+function cxCheckDayRollover() {
+  var now = cxDayKeyNow();
+  if (_cxDayKey === null) { _cxDayKey = now; return false; }
+  if (_cxDayKey === now) return false;
+  _cxDayKey = now;
+  try { _hzHgKnownMap = null; } catch (e) {}
+  try { if (typeof initCheckin === 'function' && document.getElementById('habitList')) initCheckin(); } catch (e) {}
+  return true;
+}
+setInterval(cxCheckDayRollover, 30000);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) cxCheckDayRollover(); });
+window.addEventListener('focus', cxCheckDayRollover);
+window.addEventListener('pageshow', cxCheckDayRollover);
+
 function initCheckin() {
   var today = getTodayStr();
+  if (_cxDayKey === null) _cxDayKey = today;
   var data = getCheckinData();
   if (!data[today]) data[today] = { habits: {}, hongen: data.hongen || 0 };
 
@@ -37017,20 +37121,10 @@ function onLoginSuccess() {
     }
   }
 
-  // 本机已有学习数据 → 以本机为准推上云（换机 / 重装前的关键一步）
-  // 本机是空的（刚重装）→ 从云端拉回来
-  var _hasLocalBiz = false;
-  try {
-    _hasLocalBiz = !!(localStorage.getItem('cx_checkin') || localStorage.getItem('cx_stars'));
-  } catch (e) {}
-  if (_hasLocalBiz) {
-    setTimeout(function () {
-      if (window.cxCloudFullPush) window.cxCloudFullPush();
-      else syncLocalToCloud();
-    }, 400);
-  } else {
-    syncFromCloud();
-  }
+  // 登录后统一对账：云端与本地逐天合并，两边都不丢
+  // 换机 / 重装 → 本机是空的，合并结果就是云端那份，打卡记录和累计天数全回来
+  // 新机器只是先点了一下 → 也只补那一天，不会把云端历史冲掉
+  setTimeout(function () { cxCloudReconcile(); }, 400);
 }
 
 function doLogout(silent) {
@@ -37201,6 +37295,7 @@ function syncFromCloud() {
 }
 
 function refreshAllModulesData() {
+  try { _hzHgKnownMap = null; } catch (e) {}
   totalStars = parseInt(localStorage.getItem('cx_stars') || '0');
   if (typeof updateTotalStars === 'function') updateTotalStars();
   var el = document.getElementById('totalStars');
