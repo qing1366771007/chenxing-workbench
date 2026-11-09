@@ -3214,7 +3214,7 @@ input { font-family:inherit; }
             <div id="hzAsrEnv" style="display:none;margin:6px 2px 0;font-size:12px;line-height:1.55;color:#e17055;text-align:center;"></div>
             <div class="hz-hg-asr" id="hzAsrTip"></div>
             <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
-              <div>答对了！这个字认识吗？</div>
+              <div>这个字认识吗？</div>
               <button onclick="hzAsrConfirm(1)">✅ 认识</button>
               <button class="ghost" onclick="hzAsrConfirm(0)">再看看</button>
             </div>
@@ -19086,6 +19086,12 @@ input { font-family:inherit; }
 .hz-hg-asr.ok { color:#00895a; }
 .hz-hg-asr.warn { color:#d97706; }
 .hz-hg-asr.listen { color:#e84393; }
+/* 🎆 答题反馈（2026-11-09）：对了放烟花、错了抖动 */
+.hz-hg-bigchar.pop { animation:hzPop .55s cubic-bezier(.2,1.5,.45,1); }
+.hz-hg-bigchar.shake { animation:hzShake .45s ease-in-out; }
+@keyframes hzPop { 0%{transform:scale(.55);opacity:.35} 55%{transform:scale(1.22)} 100%{transform:scale(1)} }
+@keyframes hzShake { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-9px)} 35%{transform:translateX(9px)} 55%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
 .hz-hg-confirm { margin-top:10px; background:#eafff6; border:2px dashed #2ecc71; border-radius:12px; padding:10px 8px 4px;
   text-align:center; font-size:14px; font-weight:700; color:#0f8a4d; }
 .hz-hg-confirm button { border:none; border-radius:9px; padding:8px 14px; font-size:14px; font-weight:800; margin:8px 4px 0;
@@ -21177,7 +21183,7 @@ input { font-family:inherit; }
             </div>
             <div class="hz-hg-asr" id="hzAsrTip"></div>
             <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
-              <div>答对了！这个字认识吗？</div>
+              <div>这个字认识吗？</div>
               <button onclick="hzAsrConfirm(1)">✅ 认识</button>
               <button class="ghost" onclick="hzAsrConfirm(0)">再看看</button>
             </div>
@@ -29428,6 +29434,7 @@ function hzHgPick(gi) {
   // 2026-11-09：点字不再自动读出声，让孩子自己认、自己读
   hzAsrShowConfirm(false);
   hzAsrS.pendingIdx = -1;
+  hzHintClear();
   hzAsrSay('👀 看清这个字，点下面的 🎤 读给我听', '');
   hzAsrBindHold();
 }
@@ -29801,6 +29808,146 @@ function hzAsrTap() {
   hzAsrRun('single', [ch], 8000, finish);
 }
 
+// ============================================================
+// 🎆 答题反馈增强（2026-11-09）：读对放烟花、读错给读音提示
+// ============================================================
+var HZ_TONE_MARKS = {
+  'a': ['ā', 'á', 'ǎ', 'à'], 'e': ['ē', 'é', 'ě', 'è'], 'i': ['ī', 'í', 'ǐ', 'ì'],
+  'o': ['ō', 'ó', 'ǒ', 'ò'], 'u': ['ū', 'ú', 'ǔ', 'ù'], 'ü': ['ǖ', 'ǘ', 'ǚ', 'ǜ'], 'v': ['ǖ', 'ǘ', 'ǚ', 'ǜ']
+};
+var HZ_TONE_NAME = ['', '第一声', '第二声', '第三声', '第四声', '轻声'];
+
+// 把 "ke3" 变成 "kě" + 声调名
+function hzPyPretty(py) {
+  var raw = String(py || '').trim();
+  var m = /^([a-zA-Züv]+)([1-5])?$/.exec(raw);
+  if (!m) return { show: raw, tone: 0, name: '' };
+  var s = m[1].toLowerCase(), t = parseInt(m[2] || '0', 10), i, idx = -1;
+  var plain = s.replace(/v/g, 'ü');
+  if (!(t >= 1 && t <= 4)) return { show: plain, tone: t, name: HZ_TONE_NAME[t] || '' };
+  if (s.indexOf('a') >= 0) idx = s.indexOf('a');
+  else if (s.indexOf('e') >= 0) idx = s.indexOf('e');
+  else if (s.indexOf('ou') >= 0) idx = s.indexOf('ou');
+  else for (i = s.length - 1; i >= 0; i--) { if ('iuüvo'.indexOf(s.charAt(i)) >= 0) { idx = i; break; } }
+  var mk = idx >= 0 ? HZ_TONE_MARKS[s.charAt(idx)] : null;
+  if (!mk) { idx = s.indexOf('v'); mk = idx >= 0 ? HZ_TONE_MARKS.v : null; }
+  var out = plain;
+  if (idx >= 0 && mk) out = s.substring(0, idx).replace(/v/g, 'ü') + mk[t - 1] + s.substring(idx + 1).replace(/v/g, 'ü');
+  return { show: out, tone: t, name: HZ_TONE_NAME[t] || '' };
+}
+
+function hzPyOfChar(ch) {
+  var raw = (typeof HZ_PY !== 'undefined' && HZ_PY[ch]) ? String(HZ_PY[ch]) : '';
+  return hzPyPretty(raw.split('/')[0] || '');
+}
+
+// 大字下面显示「kě（第三声）」
+function hzHintShow(ch) {
+  var big = document.getElementById('hzHgBigChar');
+  if (!big || !big.parentNode) return;
+  var el = document.getElementById('_hzHintPinyin');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_hzHintPinyin';
+    el.style.cssText = 'margin-top:6px;font-size:17px;font-weight:800;color:#e17055;letter-spacing:1.5px;min-height:20px;line-height:1.3;';
+    if (big.nextSibling) big.parentNode.insertBefore(el, big.nextSibling);
+    else big.parentNode.appendChild(el);
+  }
+  var p = hzPyOfChar(ch);
+  el.textContent = p.show ? (p.show + (p.name ? ' · ' + p.name : '')) : '';
+}
+
+function hzHintClear() {
+  var el = document.getElementById('_hzHintPinyin');
+  if (el) el.textContent = '';
+}
+
+function hzBigCharFx(cls) {
+  var big = document.getElementById('hzHgBigChar');
+  if (!big) return;
+  try { big.classList.remove('pop', 'shake'); } catch (e) {}
+  void big.offsetWidth;
+  try { big.classList.add(cls); } catch (e) {}
+  setTimeout(function () { try { big.classList.remove(cls); } catch (e) {} }, 800);
+}
+
+// —— 烟花：canvas 粒子，2 秒后自动移除，不挡点击 ——
+function cxFireworks(opt) {
+  opt = opt || {};
+  var old = document.getElementById('_cxFireworks');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  var cv = document.createElement('canvas');
+  cv.id = '_cxFireworks';
+  cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(cv);
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var W = window.innerWidth, H = window.innerHeight;
+  cv.width = Math.floor(W * dpr); cv.height = Math.floor(H * dpr);
+  var g = cv.getContext('2d');
+  if (!g) { if (cv.parentNode) cv.parentNode.removeChild(cv); return; }
+  g.scale(dpr, dpr);
+
+  var COLORS = ['#ff6b81', '#ffd93d', '#6bcB77', '#4d96ff', '#b983ff', '#ff9f43', '#00d2d3'];
+  var parts = [], t0 = performance.now(), last = t0, DUR = opt.duration || 2200, fired = {};
+  var PLAN = [
+    [70, 0.50, 0.40, 58], [300, 0.26, 0.34, 44], [430, 0.74, 0.32, 44],
+    [720, 0.50, 0.30, 58], [960, 0.20, 0.40, 40], [1080, 0.80, 0.42, 40],
+    [1420, 0.50, 0.36, 52]
+  ];
+
+  function boom(x, y, n) {
+    var c1 = COLORS[Math.floor(Math.random() * COLORS.length)];
+    var c2 = COLORS[Math.floor(Math.random() * COLORS.length)];
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2, sp = 40 + Math.random() * 195;
+      parts.push({
+        x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        life: 0, ttl: 0.7 + Math.random() * 0.8,
+        c: Math.random() < 0.62 ? c1 : c2,
+        r: 1.1 + Math.random() * 1.9
+      });
+    }
+    parts.push({ x: x, y: y, vx: 0, vy: 0, life: 0, ttl: 0.3, c: '#ffffff', r: 14, flash: 1 });
+  }
+
+  function frame(now) {
+    var dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    last = now;
+    g.clearRect(0, 0, W, H);
+    for (var i = 0; i < PLAN.length; i++) {
+      if (!fired[i] && now - t0 >= PLAN[i][0]) { fired[i] = 1; boom(W * PLAN[i][1], H * PLAN[i][2], PLAN[i][3]); }
+    }
+    g.globalCompositeOperation = 'lighter';
+    for (var k = parts.length - 1; k >= 0; k--) {
+      var p = parts[k];
+      p.life += dt;
+      if (p.life >= p.ttl) { parts.splice(k, 1); continue; }
+      p.vy += 130 * dt; p.vx *= (1 - 1.1 * dt); p.vy *= (1 - 0.5 * dt);
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      var al = Math.max(0, 1 - p.life / p.ttl);
+      if (p.flash) {
+        var rr = p.r * (1 + p.life * 5);
+        var grd = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
+        grd.addColorStop(0, 'rgba(255,255,255,.95)');
+        grd.addColorStop(1, 'rgba(255,255,255,0)');
+        g.globalAlpha = al * 0.9;
+        g.fillStyle = grd;
+        g.beginPath(); g.arc(p.x, p.y, rr, 0, 6.2832); g.fill();
+      } else {
+        g.globalAlpha = al;
+        g.fillStyle = p.c;
+        g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.2832); g.fill();
+      }
+    }
+    g.globalAlpha = 1;
+    g.globalCompositeOperation = 'source-over';
+    if (now < t0 + DUR || parts.length) requestAnimationFrame(frame);
+    else if (cv.parentNode) cv.parentNode.removeChild(cv);
+  }
+  requestAnimationFrame(frame);
+}
+
+// —— 判定：读对放烟花，读错给读音提示 ——
 function hzAsrHoldJudge(idx, ch, text, err) {
   if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
   if (!text) {
@@ -29809,15 +29956,27 @@ function hzAsrHoldJudge(idx, ch, text, err) {
     else hzAsrSay('😶 没听清，再点一次读～', 'warn');
     return;
   }
+  var py = hzPyOfChar(ch);
+  var pyTxt = py.show ? (py.show + (py.name ? '（' + py.name + '）' : '')) : '';
   if (hzAsrCharMatch(text, ch)) {
-    hzAsrSay('✅ 答对了！我听到「' + text + '」', 'ok');
+    // ✅ 读对：烟花 + 弹跳 + 鼓励语音，再确认认识不认识
+    hzAsrSay('✅ 读对啦！「' + ch + '」' + (pyTxt ? ' 读 ' + pyTxt : '') + '，这个字认识吗？', 'ok');
+    hzHintShow(ch);
+    hzBigCharFx('pop');
+    cxFireworks({ duration: 2200 });
     hzAsrS.pendingIdx = idx;
     _hzHgPickIdx = idx;
     hzAsrShowConfirm(true);
-    try { speakZh('答对了'); } catch (e) {}
+    var cheers = ['答对啦，太棒了', '对了，真厉害', '答对啦，继续加油'];
+    try { speakZh(cheers[Math.floor(Math.random() * cheers.length)]); } catch (e) {}
   } else {
-    hzAsrSay('❌ 答错了，我听到「' + text + '」，再点一次读', 'warn');
-    try { speakZh('答错了，再读一次'); } catch (e) {}
+    // ❌ 读错：像答题一样给读音提示，跟着念一遍
+    hzAsrSay('💡 再想想～这个字读 ' + (pyTxt || '？') + '，跟着念一遍再读' + (text && text !== ch ? '（我听到「' + text + '」）' : ''), 'warn');
+    hzHintShow(ch);
+    hzBigCharFx('shake');
+    setTimeout(function () {
+      try { speakZhSlow(ch); } catch (e1) { try { speakZh(ch); } catch (e2) {} }
+    }, 260);
   }
 }
 
@@ -29869,6 +30028,7 @@ function hzAsrGroupRead() {
     hzHgRender();
     if (got === chars.length) {
       hzAsrSay('🎉 这一组 10 个字全读对！', 'ok');
+      cxFireworks({ duration: 2600 });
       try { speakZh('全对，真棒'); } catch (e) {}
     } else {
       hzAsrSay('本组读到 ' + got + '/10' + (miss.length ? '，还差：' + miss.join(' ') : '') + '（点字可单独再读）', got >= 6 ? 'ok' : 'warn');
@@ -36476,7 +36636,8 @@ function onLoginSuccess() {
     }
   }
 
-  // 本机已有学习数据 → 以本机为准推上云；本机是空的（刚重装）→ 从云端拉回来
+  // 本机已有学习数据 → 以本机为准推上云（换机 / 重装前的关键一步）
+  // 本机是空的（刚重装）→ 从云端拉回来
   var _hasLocalBiz = false;
   try {
     _hasLocalBiz = !!(localStorage.getItem('cx_checkin') || localStorage.getItem('cx_stars'));
@@ -36838,7 +36999,8 @@ function cxBackupOpen(mode) {
 
   // 页面加载 6 秒后若已登录（静默登录成功），也全量推一次
   setTimeout(function () { if (_loggedIn()) window.cxCloudFullPush(); }, 6000);
-})();</script>
+})();
+</script>
 </body>
 </html>
 
