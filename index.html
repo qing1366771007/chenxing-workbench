@@ -36395,37 +36395,51 @@ function api(url, options) {
 }
 
 // 页面加载后静默登录辰星账号，失败30秒后自动重试
+// 静默账号候选：「辰星」可能已被占用（密码不是约定的那个），依次兜底到辰星2、辰星3
+var _cxSilentNames = ['辰星', '辰星2', '辰星3'];
+
 function silentBackgroundLogin() {
   var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
-  if (saved['辰星'] && saved['辰星'].token) {
-    localStorage.setItem('cx_token', saved['辰星'].token);
-    api('/user').then(function(data) {
-      currentUser = data.user;
-      onLoginSuccess();
-    }).catch(function() {
-      silentLoginOrRegister();
-    });
-    return;
+  var keys = Object.keys(saved);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    if (saved[k] && saved[k].token) {
+      localStorage.setItem('cx_token', saved[k].token);
+      api('/user').then(function (data) {
+        currentUser = data.user;
+        onLoginSuccess();
+      }).catch(function () {
+        silentLoginOrRegister(0);
+      });
+      return;
+    }
   }
-  silentLoginOrRegister();
+  silentLoginOrRegister(0);
 }
 
-function silentLoginOrRegister() {
-  api('/login', { method: 'POST', body: { username: '辰星', password: 'chenxing123' } })
-    .then(function(data) { silentSaveAndEnter(data); })
-    .catch(function() {
-      api('/register', { method: 'POST', body: { username: '辰星', password: 'chenxing123', role: 'child' } })
-        .then(function(data) { silentSaveAndEnter(data); })
-        .catch(function() {
-          setTimeout(silentBackgroundLogin, 30000);
+function silentLoginOrRegister(idx) {
+  idx = idx || 0;
+  if (idx >= _cxSilentNames.length) {
+    setTimeout(silentBackgroundLogin, 30000);
+    return;
+  }
+  var name = _cxSilentNames[idx];
+  api('/login', { method: 'POST', body: { username: name, password: 'chenxing123' } })
+    .then(function (data) { silentSaveAndEnter(data, name); })
+    .catch(function () {
+      api('/register', { method: 'POST', body: { username: name, password: 'chenxing123', role: 'child' } })
+        .then(function (data) { silentSaveAndEnter(data, name); })
+        .catch(function () {
+          silentLoginOrRegister(idx + 1);
         });
     });
 }
 
-function silentSaveAndEnter(data) {
+function silentSaveAndEnter(data, name) {
+  name = name || _cxSilentNames[0];
   localStorage.setItem('cx_token', data.token);
   var saved = JSON.parse(localStorage.getItem('cx_saved_accounts') || '{}');
-  saved['辰星'] = { token: data.token, user: data.user };
+  saved[name] = { token: data.token, user: data.user };
   localStorage.setItem('cx_saved_accounts', JSON.stringify(saved));
   currentUser = data.user;
   onLoginSuccess();
