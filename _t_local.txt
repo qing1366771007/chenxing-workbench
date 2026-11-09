@@ -1,7 +1,0 @@
-page load 126ms
-first click -> playing=true in 110ms
-src=http://localhost:3007/audio/zh/gm5izvmkrssj.mp3 dur=1.008
-audio requests: ["200 zh/gm5izvmkrssj.mp3","200 zh/gm5af78iekgx.mp3","200 zh/gm5lq3dym6w8.mp3","200 zh/glmna63wyb8l.mp3","200 zh/eaafrre9vk6p.mp3","200 zh/gln3ngo80nur.mp3","200 zh/gm5mi5lsaaxa.mp3","200 zh/gm5mw6pp4cxt.mp3","200 zh/edd7mvan3i3x.mp3","200 zh/edmz6nbc1xbq.mp3","200 zh/1x9kfv9gzbf4v.mp3","200 zh/eaadfkqsv83j.mp3"]
-tts fallback requests: 1
-total audio requests after group nav: 61
-download btn: 📥 下载离线发音包

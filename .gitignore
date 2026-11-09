@@ -4,3 +4,10 @@ server/data/
 .DS_Store
 *.apk
 *.apk.tmp
+
+# 临时调试文件（脚本/日志/截图草稿）不进仓库
+_*
+_临时文件/
+_edgeprof/
+.trae-html-share-packages/
+!洪恩识字-*.png

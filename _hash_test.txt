@@ -1,8 +1,0 @@
-一  /audio/zh/gm5izvmkrssj.mp3  exists=true  8064B
-三  /audio/zh/gm5lq3dym6w8.mp3  exists=true  8928B
-鹅  /audio/zh/1x0nvxewaybae.mp3  exists=false  
-妈妈  /audio/zh/3orw8v3xpj83r.mp3  exists=false  
-二  /audio/zh/glmna63wyb8l.mp3  exists=true  8352B
-人  /audio/zh/gln3ngo80nur.mp3  exists=true  8928B
-大  /audio/zh/eaafrre9vk6p.mp3  exists=true  8064B
-EN Hello! -> /audio/en/280ao39p4a0u6.mp3 exists=false

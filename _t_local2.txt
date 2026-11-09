@@ -1,7 +1,0 @@
-load ok, errors=2
-hanzi speak: playing=true 86ms
-poem opened: 静夜思, audio reqs so far=161
-engsentence opened, audio reqs=588
-audio 200s=396 non200=192
-tts fallbacks=3
-js errors: CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) | CONSOLE Failed to load resource: the server responded with a status of 400 () | CONSOLE Failed to load resource: the server responded with a status of 400 ()

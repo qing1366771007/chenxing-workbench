@@ -1,6 +1,0 @@
-一  8064 bytes  0.58s  head=b'\xff\xf3\x88\xc4'
-三  8928 bytes  0.44s  head=b'\xff\xf3\x88\xc4'
-鹅  8640 bytes  0.35s  head=b'\xff\xf3\x88\xc4'
-妈妈  10080 bytes  0.47s  head=b'\xff\xf3\x88\xc4'
-床前明月光  19008 bytes  0.61s  head=b'\xff\xf3\x88\xc4'
-EN  8748 bytes 0.55s
