@@ -2986,6 +2986,7 @@ input { font-family:inherit; }
 
         <div style="margin-top:20px;text-align:center;">
           <div style="font-size:13px;color:var(--text-light);">连续打卡 <span id="streakDays" style="font-size:20px;font-weight:700;color:var(--star-orange);">0</span> 天 🔥</div>
+          <div style="font-size:13px;color:var(--text-light);margin-top:8px;">累计打卡 <span id="totalCheckinDays" style="font-size:20px;font-weight:700;color:var(--star-blue);">0</span> 天 📅</div>
         </div>
       </div>
     </div>
@@ -22754,7 +22755,8 @@ function initCheckin() {
         (done ? 'background:linear-gradient(135deg,#55efc4,#00b894);color:#fff;' : '');
       card.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">' + h.icon + '</div>' +
         '<div style="font-size:15px;font-weight:700;">' + h.name + '</div>' +
-        '<div style="font-size:12px;margin-top:4px;">' + (done ? '✅ 已完成' : '点我打卡') + '</div>';
+        '<div style="font-size:12px;margin-top:4px;">' + (done ? '✅ 已完成' : '点我打卡') + '</div>' +
+        '<div style="font-size:11px;margin-top:3px;opacity:.72;">累计 ' + habitDays(data, h.id) + ' 天</div>';
       card.onclick = function() { toggleHabit(h.id); };
       list.appendChild(card);
     });
@@ -22765,6 +22767,8 @@ function initCheckin() {
   var streak = calcStreak(data);
   var sd = document.getElementById('streakDays');
   if (sd) sd.textContent = streak;
+  var td = document.getElementById('totalCheckinDays');
+  if (td) td.textContent = calcTotalDays(data);
 }
 
 function toggleHabitEdit() {
@@ -22897,6 +22901,30 @@ function calcStreak(data) {
     }
   }
   return streak;
+}
+
+// 打卡统计：某个习惯累计打卡了几天 / 整个打卡项目一共打卡了几天（2026-11-09 亚青要）
+function isCheckinDateKey(k) {
+  return /^\d{4}-\d{1,2}-\d{1,2}$/.test(k);
+}
+function habitDays(data, id) {
+  var n = 0, k;
+  for (k in data) {
+    if (!data.hasOwnProperty(k) || !isCheckinDateKey(k)) continue;
+    var h = data[k] && data[k].habits;
+    if (h && h[id]) n++;
+  }
+  return n;
+}
+function calcTotalDays(data) {
+  var n = 0, k;
+  for (k in data) {
+    if (!data.hasOwnProperty(k) || !isCheckinDateKey(k)) continue;
+    var h = data[k] && data[k].habits;
+    if (!h) continue;
+    for (var id in h) { if (h.hasOwnProperty(id) && h[id]) { n++; break; } }
+  }
+  return n;
 }
 
 // ============================================================
