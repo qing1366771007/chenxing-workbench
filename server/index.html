@@ -762,12 +762,28 @@ input { font-family:inherit; }
 .hz-hg-badge.off { color:#e0e0e0; }
 .hz-hg-big { margin-top:14px; background:#fff; border-radius:16px; padding:14px 14px 16px; box-shadow:0 4px 14px rgba(0,0,0,.07); text-align:center; }
 .hz-hg-bigchar { font-size:76px; font-weight:800; color:var(--star-purple,#8b5cf6); line-height:1.05; }
-.hz-hg-acts { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+.hz-hg-acts { display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
 .hz-hg-act { border:none; border-radius:10px; padding:10px 15px; font-size:14px; font-weight:700; color:#fff; cursor:pointer; }
 .hz-hg-act:active { transform:scale(.96); }
 .hz-hg-act.ok { background:linear-gradient(135deg,#55efc4,#00b894); }
 .hz-hg-act.no { background:linear-gradient(135deg,#ffb3b3,#ff7675); }
 .hz-hg-act.spk { background:linear-gradient(135deg,#74b9ff,#0984e3); }
+.hz-hg-mic-row { display:flex; gap:8px; justify-content:center; margin-top:9px; flex-wrap:wrap; }
+.hz-hg-mic { border:none; border-radius:12px; padding:11px 16px; font-size:14px; font-weight:800; color:#fff; cursor:pointer;
+  background:linear-gradient(135deg,#fd79a8,#e84393); box-shadow:0 3px 10px rgba(232,67,147,.25); }
+.hz-hg-mic.alt { background:linear-gradient(135deg,#a29bfe,#6c5ce7); box-shadow:0 3px 10px rgba(108,92,231,.25); }
+.hz-hg-mic:active { transform:scale(.96); }
+.hz-hg-mic.rec { animation:hzAsrPulse 1s infinite; }
+@keyframes hzAsrPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.hz-hg-asr { margin-top:9px; min-height:20px; font-size:13px; font-weight:700; color:#636e72; text-align:center; line-height:1.5; }
+.hz-hg-asr.ok { color:#00895a; }
+.hz-hg-asr.warn { color:#d97706; }
+.hz-hg-asr.listen { color:#e84393; }
+.hz-hg-confirm { margin-top:10px; background:#eafff6; border:2px dashed #2ecc71; border-radius:12px; padding:10px 8px 4px;
+  text-align:center; font-size:14px; font-weight:700; color:#0f8a4d; }
+.hz-hg-confirm button { border:none; border-radius:9px; padding:8px 14px; font-size:14px; font-weight:800; margin:8px 4px 0;
+  cursor:pointer; color:#fff; background:linear-gradient(135deg,#55efc4,#00b894); }
+.hz-hg-confirm button.ghost { background:#dfe6e9; color:#636e72; }
 @media (max-width:420px) {
   .hz-hg-ch { font-size:26px; }
   .hz-hg-bigchar { font-size:64px; }
@@ -3184,6 +3200,16 @@ input { font-family:inherit; }
               <button class="hz-hg-act spk" onclick="hzHgSpeak()">🔊 读一读</button>
               <button class="hz-hg-act ok" onclick="hzHgMark(1)">✅ 认识</button>
               <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
+            </div>
+            <div class="hz-hg-mic-row">
+              <button class="hz-hg-mic" id="hzAsrSingle" onclick="hzAsrSingle()">🎤 我读一下</button>
+              <button class="hz-hg-mic alt" onclick="hzAsrGroupRead()">🎤 整组读一遍</button>
+            </div>
+            <div class="hz-hg-asr" id="hzAsrTip"></div>
+            <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
+              <div>读对啦！这个字认识吗？</div>
+              <button onclick="hzAsrConfirm(1)">✅ 认识</button>
+              <button class="ghost" onclick="hzAsrConfirm(0)">再看看</button>
             </div>
           </div>
         </div>
@@ -19036,12 +19062,28 @@ input { font-family:inherit; }
 .hz-hg-badge.off { color:#e0e0e0; }
 .hz-hg-big { margin-top:14px; background:#fff; border-radius:16px; padding:14px 14px 16px; box-shadow:0 4px 14px rgba(0,0,0,.07); text-align:center; }
 .hz-hg-bigchar { font-size:76px; font-weight:800; color:var(--star-purple,#8b5cf6); line-height:1.05; }
-.hz-hg-acts { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+.hz-hg-acts { display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
 .hz-hg-act { border:none; border-radius:10px; padding:10px 15px; font-size:14px; font-weight:700; color:#fff; cursor:pointer; }
 .hz-hg-act:active { transform:scale(.96); }
 .hz-hg-act.ok { background:linear-gradient(135deg,#55efc4,#00b894); }
 .hz-hg-act.no { background:linear-gradient(135deg,#ffb3b3,#ff7675); }
 .hz-hg-act.spk { background:linear-gradient(135deg,#74b9ff,#0984e3); }
+.hz-hg-mic-row { display:flex; gap:8px; justify-content:center; margin-top:9px; flex-wrap:wrap; }
+.hz-hg-mic { border:none; border-radius:12px; padding:11px 16px; font-size:14px; font-weight:800; color:#fff; cursor:pointer;
+  background:linear-gradient(135deg,#fd79a8,#e84393); box-shadow:0 3px 10px rgba(232,67,147,.25); }
+.hz-hg-mic.alt { background:linear-gradient(135deg,#a29bfe,#6c5ce7); box-shadow:0 3px 10px rgba(108,92,231,.25); }
+.hz-hg-mic:active { transform:scale(.96); }
+.hz-hg-mic.rec { animation:hzAsrPulse 1s infinite; }
+@keyframes hzAsrPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.hz-hg-asr { margin-top:9px; min-height:20px; font-size:13px; font-weight:700; color:#636e72; text-align:center; line-height:1.5; }
+.hz-hg-asr.ok { color:#00895a; }
+.hz-hg-asr.warn { color:#d97706; }
+.hz-hg-asr.listen { color:#e84393; }
+.hz-hg-confirm { margin-top:10px; background:#eafff6; border:2px dashed #2ecc71; border-radius:12px; padding:10px 8px 4px;
+  text-align:center; font-size:14px; font-weight:700; color:#0f8a4d; }
+.hz-hg-confirm button { border:none; border-radius:9px; padding:8px 14px; font-size:14px; font-weight:800; margin:8px 4px 0;
+  cursor:pointer; color:#fff; background:linear-gradient(135deg,#55efc4,#00b894); }
+.hz-hg-confirm button.ghost { background:#dfe6e9; color:#636e72; }
 @media (max-width:420px) {
   .hz-hg-ch { font-size:26px; }
   .hz-hg-bigchar { font-size:64px; }
@@ -21121,6 +21163,16 @@ input { font-family:inherit; }
               <button class="hz-hg-act spk" onclick="hzHgSpeak()">🔊 读一读</button>
               <button class="hz-hg-act ok" onclick="hzHgMark(1)">✅ 认识</button>
               <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
+            </div>
+            <div class="hz-hg-mic-row">
+              <button class="hz-hg-mic" id="hzAsrSingle" onclick="hzAsrSingle()">🎤 我读一下</button>
+              <button class="hz-hg-mic alt" onclick="hzAsrGroupRead()">🎤 整组读一遍</button>
+            </div>
+            <div class="hz-hg-asr" id="hzAsrTip"></div>
+            <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
+              <div>读对啦！这个字认识吗？</div>
+              <button onclick="hzAsrConfirm(1)">✅ 认识</button>
+              <button class="ghost" onclick="hzAsrConfirm(0)">再看看</button>
             </div>
           </div>
         </div>
@@ -29351,6 +29403,324 @@ function hzHgAdvance() {
   if (gi >= HZ_HG_TOTAL) return;
   if (gi % 10 === 0) { _hzHgGroup = Math.floor(gi / 10); hzHgRender(); }
   setTimeout(function () { hzHgPick(gi); }, 280);
+}
+
+// ============================================================
+// 🎤 跟读评测（2026-11-09）
+// 通道①云端=/api/asr 百度短语音（最准，需环境变量 BAIDU_ASR_KEY/SECRET）
+// 通道②浏览器 Web Speech（零配置，安卓 APK 内不可用）
+// 通道③只有麦克风 → 录音回放，孩子自己判断
+// ============================================================
+var hzAsrS = {
+  busy: false, cloudReady: null, stream: null, ctx: null, proc: null,
+  gain: null, src: null, bufs: [], stopping: false, timer: null,
+  startedAt: 0, silentSince: 0, lastBlobUrl: '', pendingIdx: -1
+};
+
+function hzAsrSay(msg, cls) {
+  var el = document.getElementById('hzAsrTip');
+  if (!el) return;
+  el.className = 'hz-hg-asr' + (cls ? ' ' + cls : '');
+  el.textContent = msg || '';
+}
+
+function hzAsrShowConfirm(show) {
+  var el = document.getElementById('hzAsrConfirm');
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+
+function hzAsrConfirm(yes) {
+  hzAsrShowConfirm(false);
+  if (!yes) { hzAsrS.pendingIdx = -1; return; }
+  if (hzAsrS.pendingIdx >= 0) {
+    var idx = hzAsrS.pendingIdx;
+    hzAsrS.pendingIdx = -1;
+    _hzHgPickIdx = idx;
+    hzHgMark(1);
+  }
+  hzAsrSay('👍 记下了', 'ok');
+}
+
+function hzAsrClean(t) {
+  return String(t || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+}
+
+// 把识别文本按顺序对齐到目标字序列，返回布尔数组
+function hzAsrAlign(chars, text) {
+  var t = hzAsrClean(text), p = 0, out = [], i, k;
+  for (i = 0; i < chars.length; i++) {
+    var ch = chars[i], found = -1;
+    for (k = p; k < t.length && k < p + 5; k++) {
+      if (t.charAt(k) === ch) { found = k; break; }
+    }
+    out.push(found >= 0);
+    if (found >= 0) p = found + 1;
+  }
+  return out;
+}
+
+function hzAsrBrowserSR() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function hzAsrCanRec() {
+  return !!(window.AudioContext || window.webkitAudioContext) &&
+    !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+
+function hzAsrCheckCloud(cb) {
+  if (hzAsrS.cloudReady !== null) { cb(hzAsrS.cloudReady); return; }
+  var x = new XMLHttpRequest();
+  x.open('GET', '/api/asr/status', true);
+  x.onload = function () {
+    var ok = false;
+    try { ok = !!JSON.parse(x.responseText).ready; } catch (e) {}
+    hzAsrS.cloudReady = ok;
+    cb(ok);
+  };
+  x.onerror = function () { hzAsrS.cloudReady = false; cb(false); };
+  x.send();
+}
+
+function hzAsrB64(bytes) {
+  var bin = '', CH = 0x8000, i;
+  for (i = 0; i < bytes.length; i += CH) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+  }
+  return btoa(bin);
+}
+
+function hzAsrWav(bufs, rate) {
+  var len = 0, i;
+  for (i = 0; i < bufs.length; i++) len += bufs[i].length;
+  if (len < 1600) return null;
+  var all = new Float32Array(len), o = 0;
+  for (i = 0; i < bufs.length; i++) { all.set(bufs[i], o); o += bufs[i].length; }
+  var outRate = 16000, ratio = rate / outRate, n = Math.floor(len / ratio);
+  var pcm = new Int16Array(n);
+  for (i = 0; i < n; i++) {
+    var s = Math.floor(i * ratio), e2 = Math.min(len, Math.floor((i + 1) * ratio));
+    var sum = 0, c = 0;
+    for (var k = s; k < e2; k++) { sum += all[k]; c++; }
+    var v = c ? sum / c : 0;
+    if (v > 1) v = 1;
+    if (v < -1) v = -1;
+    pcm[i] = v < 0 ? v * 32768 : v * 32767;
+  }
+  var bytes = new Uint8Array(44 + pcm.length * 2);
+  var dv = new DataView(bytes.buffer);
+  function ws(off, str) { for (var j = 0; j < str.length; j++) dv.setUint8(off + j, str.charCodeAt(j)); }
+  ws(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length * 2, true); ws(8, 'WAVE');
+  ws(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, outRate, true); dv.setUint32(28, outRate * 2, true);
+  dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+  ws(36, 'data'); dv.setUint32(40, pcm.length * 2, true);
+  for (i = 0; i < pcm.length; i++) dv.setInt16(44 + i * 2, pcm[i], true);
+  return bytes;
+}
+
+function hzAsrStopRec(cb) {
+  if (hzAsrS.stopping) return;
+  hzAsrS.stopping = true;
+  if (hzAsrS.timer) { clearTimeout(hzAsrS.timer); hzAsrS.timer = null; }
+  try { if (hzAsrS.proc) hzAsrS.proc.onaudioprocess = null; } catch (e) {}
+  try { if (hzAsrS.src) hzAsrS.src.disconnect(); } catch (e) {}
+  try { if (hzAsrS.proc) hzAsrS.proc.disconnect(); } catch (e) {}
+  try { if (hzAsrS.gain) hzAsrS.gain.disconnect(); } catch (e) {}
+  var rate = (hzAsrS.ctx && hzAsrS.ctx.sampleRate) || 44100;
+  var bufs = hzAsrS.bufs || [];
+  try {
+    if (hzAsrS.stream) {
+      var tr = hzAsrS.stream.getTracks();
+      for (var i = 0; i < tr.length; i++) tr[i].stop();
+    }
+  } catch (e) {}
+  try { if (hzAsrS.ctx) hzAsrS.ctx.close(); } catch (e) {}
+  hzAsrS.stream = null; hzAsrS.ctx = null; hzAsrS.proc = null; hzAsrS.src = null; hzAsrS.gain = null;
+  var wav = hzAsrWav(bufs, rate);
+  if (!wav) { cb('', 'empty'); return; }
+  try {
+    var blob = new Blob([wav], { type: 'audio/wav' });
+    if (hzAsrS.lastBlobUrl) URL.revokeObjectURL(hzAsrS.lastBlobUrl);
+    hzAsrS.lastBlobUrl = URL.createObjectURL(blob);
+  } catch (e) {}
+  var x = new XMLHttpRequest();
+  x.open('POST', '/api/asr', true);
+  x.setRequestHeader('Content-Type', 'application/json');
+  x.onload = function () {
+    var j = {};
+    try { j = JSON.parse(x.responseText); } catch (e) {}
+    if (j.ok) { cb(j.text || '', ''); }
+    else { cb('', j.err || ('http' + x.status)); }
+  };
+  x.onerror = function () { cb('', 'neterr'); };
+  x.send(JSON.stringify({ audio: hzAsrB64(wav), rate: 16000 }));
+}
+
+function hzAsrStartRec(maxMs, cb) {
+  hzAsrS.stopping = false;
+  if (!hzAsrCanRec()) { cb('', 'unsupported'); return; }
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } })
+    .then(function (stream) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      var ctx = new AC();
+      var src = ctx.createMediaStreamSource(stream);
+      var proc = ctx.createScriptProcessor(2048, 1, 1);
+      hzAsrS.stream = stream; hzAsrS.ctx = ctx; hzAsrS.src = src; hzAsrS.proc = proc;
+      hzAsrS.bufs = []; hzAsrS.startedAt = Date.now(); hzAsrS.silentSince = 0;
+      proc.onaudioprocess = function (e) {
+        if (hzAsrS.stopping) return;
+        var d = e.inputBuffer.getChannelData(0);
+        hzAsrS.bufs.push(new Float32Array(d));
+        var sum = 0, cnt = 0;
+        for (var i = 0; i < d.length; i += 8) { sum += d[i] * d[i]; cnt++; }
+        var rms = Math.sqrt(sum / Math.max(1, cnt));
+        var now = Date.now();
+        if (rms > 0.015) { hzAsrS.silentSince = 0; }
+        else if (!hzAsrS.silentSince) { hzAsrS.silentSince = now; }
+        else if (now - hzAsrS.silentSince > 1300 && now - hzAsrS.startedAt > 800) {
+          hzAsrStopRec(cb);
+        }
+      };
+      var gain = ctx.createGain();
+      gain.gain.value = 0;
+      src.connect(proc); proc.connect(gain); gain.connect(ctx.destination);
+      hzAsrS.gain = gain;
+      hzAsrS.timer = setTimeout(function () { hzAsrStopRec(cb); }, maxMs);
+      var btn = document.getElementById('hzAsrSingle');
+      if (btn) btn.classList.add('rec');
+    })
+    .catch(function (err) {
+      var name = (err && err.name) || '';
+      if (name === 'NotAllowedError' || name === 'SecurityError' || name === 'PermissionDeniedError') cb('', 'denied');
+      else cb('', 'nomic');
+    });
+}
+
+function hzAsrSpeakRec(cb) {
+  var SR = hzAsrBrowserSR();
+  if (!SR) { cb('', 'nosr'); return; }
+  var rec = null, done = false;
+  function fin(t, e) {
+    if (done) return;
+    done = true;
+    try { if (rec) rec.stop(); } catch (x) {}
+    cb(t, e);
+  }
+  try { rec = new SR(); } catch (e) { cb('', 'nosr'); return; }
+  rec.lang = 'zh-CN';
+  rec.interimResults = false;
+  rec.continuous = false;
+  rec.maxAlternatives = 3;
+  rec.onresult = function (ev) {
+    var t = '';
+    for (var i = 0; i < ev.results.length; i++) t += (ev.results[i][0] && ev.results[i][0].transcript) || '';
+    fin(t, '');
+  };
+  rec.onerror = function (ev) { fin('', (ev && ev.error) || 'srerr'); };
+  rec.onend = function () { fin('', 'empty'); };
+  try { rec.start(); } catch (e) { fin('', 'srerr'); }
+  setTimeout(function () { if (!done) { try { rec.stop(); } catch (e) {} } }, 6000);
+}
+
+function hzAsrRun(mode, chars, maxMs, cb) {
+  if (hzAsrS.busy) return;
+  hzAsrS.busy = true;
+  hzAsrShowConfirm(false);
+  function finish(text, err) {
+    hzAsrS.busy = false;
+    var btn = document.getElementById('hzAsrSingle');
+    if (btn) btn.classList.remove('rec');
+    cb(text, err || '');
+  }
+  hzAsrCheckCloud(function (cloud) {
+    if (cloud && hzAsrCanRec()) {
+      hzAsrSay('🎤 我在听…读完停一下就好', 'listen');
+      hzAsrStartRec(maxMs, function (text, err) {
+        if (err === 'denied') {
+          hzAsrSay('⚠️ 麦克风没开权限：请在手机/浏览器设置里允许麦克风后重试', 'warn');
+          finish('', err); return;
+        }
+        finish(text, err);
+      });
+      return;
+    }
+    if (hzAsrBrowserSR()) {
+      hzAsrSay('🎤 我在听…请读出来', 'listen');
+      hzAsrSpeakRec(function (text, err) {
+        if (!text && err && err !== 'empty' && err !== 'no-speech' && hzAsrCanRec()) {
+          // 浏览器识别不可用（安卓 Chrome 走 Google 常被墙）→ 自动改录音回放
+          hzAsrSay('🎤 改用录音模式…', 'listen');
+          hzAsrStartRec(maxMs, function () {
+            if (hzAsrS.lastBlobUrl) {
+              try { new Audio(hzAsrS.lastBlobUrl).play(); } catch (e) {}
+            }
+            hzAsrSay('🔁 录音已回放，像不像？对得上就点「✅ 认识」', 'warn');
+            finish('', 'playback');
+          });
+          return;
+        }
+        if (!text) hzAsrSay('😶 没听清，再读一次～', 'warn');
+        finish(text, err);
+      });
+      return;
+    }
+    if (hzAsrCanRec()) {
+      hzAsrSay('🎤 录音中…（云端识别未开通，先录下来自己听）', 'listen');
+      hzAsrStartRec(maxMs, function () {
+        if (hzAsrS.lastBlobUrl) {
+          try { new Audio(hzAsrS.lastBlobUrl).play(); } catch (e) {}
+        }
+        hzAsrSay('🔁 刚才的录音已回放，像不像？对得上就点「✅ 认识」', 'warn');
+        finish('', 'playback');
+      });
+      return;
+    }
+    hzAsrSay('⚠️ 这台设备听不到声音（装新版 APK 才有麦克风权限）', 'warn');
+    finish('', 'unsupported');
+  });
+}
+
+function hzAsrSingle() {
+  if (_hzHgPickIdx < 0) { alert('先在上面点一个字，再读给我听'); return; }
+  var idx = _hzHgPickIdx, ch = hzHgCharAt(idx);
+  if (!ch) return;
+  hzAsrRun('single', [ch], 3000, function (text, err) {
+    if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
+    if (!text) { if (err !== 'empty') hzAsrSay('😶 没听到声音，再读一次～', 'warn'); return; }
+    if (hzAsrClean(text).indexOf(ch) >= 0) {
+      hzAsrSay('\u2705 听到「' + text + '」—— 读对啦！', 'ok');
+      hzAsrS.pendingIdx = idx;
+      hzAsrShowConfirm(true);
+      try { speakZh('真棒'); } catch (e) {}
+    } else {
+      hzAsrSay('🤔 我听到「' + text + '」，跟「' + ch + '」不太一样，再读一次～', 'warn');
+    }
+  });
+}
+
+function hzAsrGroupRead() {
+  var g = _hzHgGroup, s = HONGEN_GROUPS[g] || '';
+  if (!s) return;
+  var chars = s.split('');
+  hzAsrRun('group', chars, 14000, function (text, err) {
+    if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
+    if (!text) { if (err !== 'empty') hzAsrSay('😶 没听清这一组，再读一遍～', 'warn'); return; }
+    var res = hzAsrAlign(chars, text);
+    var m = hzHgKnown(), got = 0, miss = [], i;
+    for (i = 0; i < chars.length; i++) {
+      if (res[i]) { got++; m[g * 10 + i] = 1; }
+      else { miss.push(chars[i]); }
+    }
+    hzHgSave();
+    hzHgRender();
+    if (got === chars.length) {
+      hzAsrSay('🎉 这一组 10 个字全读对！', 'ok');
+      try { speakZh('全对，真棒'); } catch (e) {}
+    } else {
+      hzAsrSay('本组读到 ' + got + '/10' + (miss.length ? '，还差：' + miss.join(' ') : '') + '（点字可单独再读）', got >= 6 ? 'ok' : 'warn');
+    }
+  });
 }
 
 function hzHgPrev() {

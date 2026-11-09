@@ -13,12 +13,16 @@ import android.speech.tts.TextToSpeech;
 import android.webkit.JavascriptInterface;
 import java.util.Locale;
 import androidx.appcompat.app.AppCompatActivity;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.webkit.PermissionRequest;
 
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private TextToSpeech tts;
     private static final String URL = "https://chenxing-workbench.onrender.com";
+    private static final int REQ_RECORD_AUDIO = 1001;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -128,9 +132,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.setWebChromeClient(new WebChromeClient());
+        // 网页里的麦克风（孩子跟读、语音评测）→ WebView 默认拒绝，必须显式授权
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            request.grant(request.getResources());
+                        } catch (Exception e) {
+                            request.deny();
+                        }
+                    }
+                });
+            }
+        });
+
+        askAudioPermission();
 
         webView.loadUrl(URL);
+    }
+
+
+    // 安卓 6.0+ 麦克风要运行时申请
+    private void askAudioPermission() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_RECORD_AUDIO);
+                }
+            }
+        } catch (Exception e) {
+        }
     }
 
     @Override

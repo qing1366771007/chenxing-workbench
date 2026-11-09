@@ -607,6 +607,106 @@ app.get('/api/tts', async (req, res) => {
   }
 });
 
+// ============================================================
+// 语音识别（百度短语音）— 让小孩读、系统听
+// 需要在 Render 环境变量里配：BAIDU_ASR_KEY / BAIDU_ASR_SECRET
+// 未配置时 /api/asr/status 返回 ready=false，前端自动降级
+// ============================================================
+let _bdAsrTok = { token: '', exp: 0 };
+
+app.get('/api/asr/status', (req, res) => {
+  res.json({
+    ready: !!(process.env.BAIDU_ASR_KEY && process.env.BAIDU_ASR_SECRET),
+    engine: 'baidu'
+  });
+});
+
+function getBaiduAsrToken() {
+  return new Promise((resolve) => {
+    const key = process.env.BAIDU_ASR_KEY;
+    const sec = process.env.BAIDU_ASR_SECRET;
+    if (!key || !sec) return resolve(null);
+    if (_bdAsrTok.token && Date.now() < _bdAsrTok.exp) return resolve(_bdAsrTok.token);
+    const https = require('https');
+    const url = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' +
+      encodeURIComponent(key) + '&client_secret=' + encodeURIComponent(sec);
+    const rq = https.request(url, { method: 'POST', headers: { 'Content-Length': 0 } }, (r) => {
+      let body = '';
+      r.on('data', (d) => { body += d; });
+      r.on('end', () => {
+        try {
+          const j = JSON.parse(body);
+          if (j.access_token) {
+            _bdAsrTok = {
+              token: j.access_token,
+              exp: Date.now() + ((j.expires_in || 2592000) - 7200) * 1000
+            };
+            resolve(j.access_token);
+          } else {
+            console.log('❌ 百度 ASR token 失败:', body.slice(0, 200));
+            resolve(null);
+          }
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    });
+    rq.on('error', () => resolve(null));
+    rq.end();
+  });
+}
+
+app.post('/api/asr', async (req, res) => {
+  const audio = req.body && req.body.audio;
+  const rate = Number((req.body && req.body.rate) || 16000);
+  if (!audio) return res.status(400).json({ ok: false, err: 'no_audio' });
+
+  const token = await getBaiduAsrToken();
+  if (!token) return res.status(503).json({ ok: false, err: 'no_key' });
+
+  try {
+    const https = require('https');
+    const payload = JSON.stringify({
+      format: 'wav',
+      rate: rate,
+      channel: 1,
+      cuid: 'chenxing-workbench-2026',
+      token: token,
+      speech: audio,
+      dev_pid: 1537
+    });
+    const out = await new Promise((resolve) => {
+      const rq = https.request('https://vop.baidu.com/server_api', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (r) => {
+        let b = '';
+        r.on('data', (d) => { b += d; });
+        r.on('end', () => resolve(b));
+      });
+      rq.on('error', (e) => resolve(JSON.stringify({ err_no: -1, err_msg: e.message })));
+      rq.write(payload);
+      rq.end();
+    });
+
+    let j = {};
+    try { j = JSON.parse(out); } catch (e) {}
+    if (j.err_no === 0 && Array.isArray(j.result) && j.result.length) {
+      return res.json({ ok: true, text: j.result[0] });
+    }
+    if (j.err_no === 110 || j.err_no === 111) {
+      _bdAsrTok = { token: '', exp: 0 };
+      return res.json({ ok: false, err: 'token_expired' });
+    }
+    return res.json({ ok: false, err: j.err_msg || 'asr_fail', code: j.err_no });
+  } catch (e) {
+    return res.json({ ok: false, err: e.message });
+  }
+});
+
 // 根路径直接打开工作台
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
