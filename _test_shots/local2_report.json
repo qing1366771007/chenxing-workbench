@@ -1,0 +1,175 @@
+{
+  "tag": "local2",
+  "url": "http://127.0.0.1:8811/index.html",
+  "steps": [
+    [
+      "title",
+      "辰星工作台 v2.11"
+    ],
+    [
+      "bodyClass",
+      ""
+    ],
+    [
+      "visibleScreens",
+      [
+        "home-screen",
+        "home-screen"
+      ]
+    ],
+    [
+      "hz_active",
+      true
+    ],
+    [
+      "tabs",
+      [
+        "📚 洪恩1300字",
+        "数字",
+        "自然",
+        "身体",
+        "方位",
+        "动作",
+        "家庭人物",
+        "颜色",
+        "水果蔬菜",
+        "动物",
+        "建筑场所",
+        "学习用品",
+        "交通工具",
+        "量词",
+        "天气季节",
+        "衣物",
+        "时间",
+        "人称代词",
+        "常用字"
+      ]
+    ],
+    [
+      "origCards",
+      10
+    ],
+    [
+      "origClick",
+      {
+        "spoke": [
+          [
+            "一",
+            "zh-CN"
+          ]
+        ],
+        "char": "一",
+        "shown": "hz-detail-section show"
+      }
+    ],
+    [
+      "hg_tab_click",
+      "clicked"
+    ],
+    [
+      "hg_data",
+      {
+        "groups": 130,
+        "chars": 1300,
+        "nodeCardsTotal": 10,
+        "panelVisible": "block",
+        "label": "第 1 / 130 组",
+        "cards": 10,
+        "gridHidden": "none",
+        "knownCnt": "0",
+        "groupStat": "本组 0/10"
+      }
+    ],
+    [
+      "hg_pick",
+      {
+        "spoke": [
+          [
+            "三",
+            "zh-CN"
+          ]
+        ],
+        "big": "三",
+        "picked": 1
+      }
+    ],
+    [
+      "hg_mark",
+      {
+        "hongenBefore": 0,
+        "hongenAfter": 1,
+        "knownLen": 1,
+        "knownCntUI": "1"
+      }
+    ],
+    [
+      "hg_nav",
+      {
+        "label": "第 3 / 130 组",
+        "chars": [
+          "有",
+          "牛",
+          "水",
+          "中",
+          "风",
+          "头",
+          "田",
+          "土",
+          "里",
+          "在"
+        ]
+      }
+    ],
+    [
+      "checkin",
+      {
+        "hongenCount": "1",
+        "goal": "1300",
+        "barWidth": "0.1%"
+      }
+    ],
+    [
+      "surname",
+      {
+        "rows": 50,
+        "pinyinNodes": 0,
+        "firstRowText": "01赵钱孙李，周吴郑王。🔊",
+        "firstRowHTML": "<span class=\"surname-num\">01</span><div class=\"surname-chars\">赵钱孙李，周吴郑王。</div><span class=\"surname-icon\">🔊</span>",
+        "rowH": 42,
+        "charsFont": "17px"
+      }
+    ],
+    [
+      "surname_speak",
+      [
+        [
+          "冯陈褚卫，蒋沈韩杨。",
+          "zh-CN"
+        ]
+      ]
+    ],
+    [
+      "other_modules",
+      {
+        "english": true,
+        "pinyin": true,
+        "math": true,
+        "think": true,
+        "poem": true,
+        "body": true,
+        "checkin": true,
+        "hanzi": true
+      }
+    ]
+  ],
+  "errors": [
+    "CONSOLE: Failed to load resource: the server responded with a status of 404 (File not found)",
+    "CONSOLE: Failed to load resource: the server responded with a status of 404 (File not found)",
+    "CONSOLE: Failed to load resource: the server responded with a status of 404 (File not found)",
+    "CONSOLE: Failed to load resource: the server responded with a status of 400 ()",
+    "CONSOLE: Failed to load resource: the server responded with a status of 400 ()",
+    "CONSOLE: Failed to load resource: the server responded with a status of 404 (File not found)",
+    "CONSOLE: Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "errorCount": 7
+}

@@ -568,6 +568,17 @@ app.get('/api/health', async (req, res) => {
 // ============================================================
 // 静态文件服务（前端页面）
 // ============================================================
+// 预生成的朗读音频：本地文件，一年强缓存（点一次就永久存在手机里，离线也能读）
+// 必须挂在 no-cache 中间件之前，否则会被覆盖成每次都重新下载
+app.use('/audio', express.static(path.join(__dirname, 'audio'), {
+  maxAge: '365d',
+  immutable: true,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Accept-Ranges', 'bytes');
+  }
+}));
+
 // 强制不缓存，确保App/WebView每次都加载最新版本
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

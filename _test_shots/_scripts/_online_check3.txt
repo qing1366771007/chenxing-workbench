@@ -1,0 +1,1 @@
+{'round': 2, 'status': 200, 'bytes': 2036236, 'has_cat': True, 'has_sentence': True, 'cat_times': 2, 'has_minh': True, 'same_as_local': True}

@@ -1,0 +1,74 @@
+{
+  "cats": [
+    "句子·问候",
+    "句子·礼貌用语",
+    "句子·家庭日常",
+    "句子·生活需求",
+    "句子·生活用语",
+    "句子·学校生活",
+    "句子·表达喜好",
+    "句子·询问与回答",
+    "句子·天气与季节"
+  ],
+  "counts": {
+    "句子·问候": 15,
+    "句子·礼貌用语": 14,
+    "句子·家庭日常": 34,
+    "句子·生活需求": 33,
+    "句子·生活用语": 19,
+    "句子·学校生活": 14,
+    "句子·表达喜好": 12,
+    "句子·询问与回答": 14,
+    "句子·天气与季节": 13
+  },
+  "popupTabs": [
+    "句子·问候",
+    "句子·礼貌用语",
+    "句子·家庭日常",
+    "句子·生活需求",
+    "句子·生活用语",
+    "句子·学校生活",
+    "句子·表达喜好",
+    "句子·询问与回答",
+    "句子·天气与季节"
+  ],
+  "click": "clicked",
+  "list": {
+    "cardCount": 19,
+    "firstHTML": "<div class=\"eng-sent-emoji\">💡</div><div class=\"eng-sent-body\"><div class=\"eng-sent-en\">Turn on the light.</div><div class=\"eng-sent-zh\">开灯。</div></div><div class=\"eng-sent-play\">🔊</div>",
+    "texts": [
+      "💡Turn on the light.开灯。🔊",
+      "🌙Turn off the light.关灯。🔊",
+      "🌤️Open the window.开窗。🔊"
+    ],
+    "firstRect": {
+      "w": 316,
+      "h": 75
+    },
+    "bodyScrollW": 420,
+    "innerW": 420
+  },
+  "tapReal": "💡Turn on the light.开灯。🔊",
+  "ttsCalls": [
+    "http://127.0.0.1:8812/api/tts?lang=en&text=Hi&spd=3",
+    "http://127.0.0.1:8812/api/tts?lang=zh&text=16减15等于几&spd=3",
+    "http://127.0.0.1:8812/api/tts?lang=zh&text=下一个是什么？&spd=3",
+    "http://127.0.0.1:8812/api/tts?lang=en&text=Turn on the light.&spd=3"
+  ],
+  "tapHook": [
+    [
+      "Turn off the light.",
+      "关灯。"
+    ]
+  ],
+  "otherCat": 15,
+  "modules": {
+    "engsentence": true,
+    "english": true,
+    "hanzi": true,
+    "surnames": true,
+    "checkin": true,
+    "poem": true
+  },
+  "errors": []
+}
