@@ -614,12 +614,50 @@ app.get('/api/tts', async (req, res) => {
 // ============================================================
 let _bdAsrTok = { token: '', exp: 0 };
 
+const ASR_WORKER_URL = process.env.ASR_WORKER_URL || 'https://asr.pgyfood.xyz/asr';
+
 app.get('/api/asr/status', (req, res) => {
-  res.json({
-    ready: !!(process.env.BAIDU_ASR_KEY && process.env.BAIDU_ASR_SECRET),
-    engine: 'baidu'
-  });
+  const baidu = !!(process.env.BAIDU_ASR_KEY && process.env.BAIDU_ASR_SECRET);
+  res.json({ ready: baidu || !!ASR_WORKER_URL, engine: baidu ? 'baidu' : 'whisper' });
 });
+
+// Cloudflare Workers AI（Whisper）识别：免费、国内可直连、手机/APK 都能用
+function whisperAsr(audio) {
+  return new Promise((resolve) => {
+    try {
+      const https = require('https');
+      const u = new URL(ASR_WORKER_URL);
+      const payload = JSON.stringify({ audio: audio, fmt: 'wav' });
+      const rq = https.request({
+        hostname: u.hostname,
+        path: u.pathname + (u.search || ''),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        },
+        timeout: 60000
+      }, (r) => {
+        let b = '';
+        r.on('data', (d) => { b += d; });
+        r.on('end', () => {
+          try {
+            const j = JSON.parse(b);
+            resolve(j);
+          } catch (e) {
+            resolve({ ok: false, err: 'whisper_parse' });
+          }
+        });
+      });
+      rq.on('timeout', () => { try { rq.destroy(); } catch (e) {} resolve({ ok: false, err: 'whisper_timeout' }); });
+      rq.on('error', (e) => resolve({ ok: false, err: 'whisper_' + e.message }));
+      rq.write(payload);
+      rq.end();
+    } catch (e) {
+      resolve({ ok: false, err: e.message });
+    }
+  });
+}
 
 function getBaiduAsrToken() {
   return new Promise((resolve) => {
@@ -662,7 +700,11 @@ app.post('/api/asr', async (req, res) => {
   if (!audio) return res.status(400).json({ ok: false, err: 'no_audio' });
 
   const token = await getBaiduAsrToken();
-  if (!token) return res.status(503).json({ ok: false, err: 'no_key' });
+  if (!token) {
+    const w = await whisperAsr(audio);
+    if (w && w.ok && w.text) return res.json({ ok: true, text: w.text, engine: 'whisper' });
+    return res.json({ ok: false, err: (w && w.err) || 'asr_unavailable' });
+  }
 
   try {
     const https = require('https');
