@@ -29800,6 +29800,8 @@ function hzAsrHoldJudge(idx, ch, text, err) {
   if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
   if (!text) {
     if (err === 'empty' || err === 'no-speech' || !err) hzAsrSay('😶 没听到声音，再点一次读～', 'warn');
+    else if (String(err).indexOf('timeout') >= 0) hzAsrSay('⌛ 识别太慢超时了，再点一次读～', 'warn');
+    else hzAsrSay('😶 没听清，再点一次读～', 'warn');
     return;
   }
   if (hzAsrCharMatch(text, ch)) {
