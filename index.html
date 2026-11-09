@@ -3203,9 +3203,10 @@ input { font-family:inherit; }
               <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
             </div>
             <div class="hz-hg-mic-row">
-              <button class="hz-hg-mic" id="hzAsrSingle">🎤 按住读</button>
+              <button class="hz-hg-mic" id="hzAsrSingle" onclick="hzAsrTap()">🎤 点我读（读完自动判）</button>
               <button class="hz-hg-mic alt" onclick="hzAsrGroupRead()">🎤 整组读一遍</button>
             </div>
+            <div id="hzAsrEnv" style="display:none;margin:6px 2px 0;font-size:12px;line-height:1.55;color:#e17055;text-align:center;"></div>
             <div class="hz-hg-asr" id="hzAsrTip"></div>
             <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
               <div>答对了！这个字认识吗？</div>
@@ -21166,7 +21167,7 @@ input { font-family:inherit; }
               <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
             </div>
             <div class="hz-hg-mic-row">
-              <button class="hz-hg-mic" id="hzAsrSingle">🎤 按住读</button>
+              <button class="hz-hg-mic" id="hzAsrSingle" onclick="hzAsrTap()">🎤 点我读（读完自动判）</button>
               <button class="hz-hg-mic alt" onclick="hzAsrGroupRead()">🎤 整组读一遍</button>
             </div>
             <div class="hz-hg-asr" id="hzAsrTip"></div>
@@ -29422,7 +29423,7 @@ function hzHgPick(gi) {
   // 2026-11-09：点字不再自动读出声，让孩子自己认、自己读
   hzAsrShowConfirm(false);
   hzAsrS.pendingIdx = -1;
-  hzAsrSay('👀 看清这个字，按住下面的 🎤 读出来', '');
+  hzAsrSay('👀 看清这个字，点下面的 🎤 读给我听', '');
   hzAsrBindHold();
 }
 
@@ -29486,6 +29487,16 @@ function hzAsrConfirm(yes) {
 
 function hzAsrClean(t) {
   return String(t || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+}
+
+// 单字判定：只认「就是这个字」或「两个字以内含这个字」
+// 否则像「下一个是什么」这种长句里带个「一」也会被误判成读对
+function hzAsrCharMatch(text, ch) {
+  var t = hzAsrClean(text);
+  if (!t) return false;
+  if (t === ch) return true;
+  if (t.length <= 2 && t.indexOf(ch) >= 0) return true;
+  return false;
 }
 
 // 把识别文本按顺序对齐到目标字序列，返回布尔数组
@@ -29672,123 +29683,148 @@ function hzAsrRun(mode, chars, maxMs, cb) {
   if (hzAsrS.busy) return;
   hzAsrS.busy = true;
   hzAsrShowConfirm(false);
+  var settled = false;
   function finish(text, err) {
+    if (settled) return;
+    settled = true;
     hzAsrS.busy = false;
     var btn = document.getElementById('hzAsrSingle');
     if (btn) btn.classList.remove('rec');
     cb(text, err || '');
   }
   hzAsrCheckCloud(function (cloud) {
+    // ① 云端（百度短语音）：最准，手机/APK/电脑都能用
     if (cloud && hzAsrCanRec()) {
       hzAsrSay('🎤 我在听…读完停一下就好', 'listen');
       hzAsrStartRec(maxMs, function (text, err) {
-        if (err === 'denied') {
-          hzAsrSay('⚠️ 麦克风没开权限：请在手机/浏览器设置里允许麦克风后重试', 'warn');
-          finish('', err); return;
-        }
+        if (err === 'denied') hzAsrSay('⚠️ 麦克风权限被拒绝：去系统设置里允许「麦克风」，再点一次', 'warn');
+        else if (err === 'nomic') hzAsrSay('⚠️ 找不到麦克风设备', 'warn');
         finish(text, err);
       });
       return;
     }
+    // ② 浏览器自带识别（电脑 Edge/苹果 Safari；国内网络多半连不上）
     if (hzAsrBrowserSR()) {
       hzAsrSay('🎤 我在听…请读出来', 'listen');
       hzAsrSpeakRec(function (text, err) {
-        if (!text && err && err !== 'empty' && err !== 'no-speech' && hzAsrCanRec()) {
-          // 浏览器识别不可用（安卓 Chrome 走 Google 常被墙）→ 自动改录音回放
-          hzAsrSay('🎤 改用录音模式…', 'listen');
-          hzAsrStartRec(maxMs, function () {
-            if (hzAsrS.lastBlobUrl) {
-              try { new Audio(hzAsrS.lastBlobUrl).play(); } catch (e) {}
-            }
-            hzAsrSay('🔁 录音已回放，像不像？对得上就点「✅ 认识」', 'warn');
-            finish('', 'playback');
-          });
-          return;
+        if (!text) {
+          if (err === 'not-allowed' || err === 'service-not-allowed') hzAsrSay('⚠️ 浏览器语音识别不可用（需联网到微软/谷歌），请在手机上开通云端识别', 'warn');
+          else if (err === 'network') hzAsrSay('⚠️ 识别服务连不上（国内网络），需要开通云端识别才能判对错', 'warn');
+          else if (err === 'empty' || err === 'no-speech' || !err) hzAsrSay('😶 没听到声音，再点一次读～', 'warn');
+          else hzAsrSay('😶 没听清，再点一次读～', 'warn');
         }
-        if (!text) hzAsrSay('😶 没听清，再读一次～', 'warn');
         finish(text, err);
       });
       return;
     }
+    // ③ 兜底：只录音 + 回放（不能判对错，让孩子自己听）
     if (hzAsrCanRec()) {
-      hzAsrSay('🎤 录音中…（云端识别未开通，先录下来自己听）', 'listen');
-      hzAsrStartRec(maxMs, function () {
-        if (hzAsrS.lastBlobUrl) {
-          try { new Audio(hzAsrS.lastBlobUrl).play(); } catch (e) {}
-        }
-        hzAsrSay('🔁 刚才的录音已回放，像不像？对得上就点「✅ 认识」', 'warn');
+      hzAsrSay('🎤 录音中…读完停一下（云端识别未开通，只能回放给你听）', 'listen');
+      hzAsrStartRec(6000, function () {
+        if (hzAsrS.lastBlobUrl) { try { new Audio(hzAsrS.lastBlobUrl).play(); } catch (e) {} }
+        hzAsrSay('🔁 刚才的录音已回放：像不像？像就点「✅ 认识」。要自动判对错，需开通云端识别', 'warn');
         finish('', 'playback');
       });
       return;
     }
-    hzAsrSay('⚠️ 这台设备听不到声音（装新版 APK 才有麦克风权限）', 'warn');
+    hzAsrSay('⚠️ 这台设备听不到声音：APK 请装含麦克风权限的新版，或在浏览器里打开', 'warn');
     finish('', 'unsupported');
   });
 }
 
-// 🎤 按住读、松手判对错（2026-11-09 亚青要求：点字不自动读，让孩子自己认自己读）
-function hzAsrSingle() { hzAsrHoldStart(); }
+function hzAsrSingle() { hzAsrTap(); }
 
-function hzAsrHoldStart(ev) {
-  if (ev && ev.cancelable) { try { ev.preventDefault(); } catch (e) {} }
-  if (hzAsrS.busy || hzAsrS.holding) return;
-  if (_hzHgPickIdx < 0) { alert('先点一个字，再读给我听'); return; }
+function hzAsrForceReset() {
+  hzAsrS.busy = false; hzAsrS.holding = false; hzAsrS.pendingStop = false;
+  hzAsrS.holdMode = false; hzAsrS.stopping = false;
+  if (hzAsrS.timer) { try { clearTimeout(hzAsrS.timer); } catch (e) {} hzAsrS.timer = null; }
+  if (hzAsrS.guard) { try { clearTimeout(hzAsrS.guard); } catch (e) {} hzAsrS.guard = null; }
+  try {
+    if (hzAsrS.stream) {
+      var tr = hzAsrS.stream.getTracks();
+      for (var i = 0; i < tr.length; i++) tr[i].stop();
+    }
+  } catch (e) {}
+  try { if (hzAsrS.ctx) hzAsrS.ctx.close(); } catch (e) {}
+  hzAsrS.stream = null; hzAsrS.ctx = null; hzAsrS.proc = null; hzAsrS.src = null; hzAsrS.gain = null;
+  var b = document.getElementById('hzAsrSingle');
+  if (b) b.classList.remove('rec');
+}
+
+function hzAsrTap() {
+  hzAsrForceReset();
+  if (_hzHgPickIdx < 0) { hzAsrSay('👆 先在上面的格子里点一个字，再点我读', 'warn'); return; }
   var idx = _hzHgPickIdx, ch = hzHgCharAt(idx);
   if (!ch) return;
-  hzAsrS.holdIdx = idx; hzAsrS.holdChar = ch;
-  hzAsrS.holding = true; hzAsrS.pendingStop = false; hzAsrS.holdMode = true;
+  hzAsrS.holdIdx = idx; hzAsrS.holdChar = ch; hzAsrS.holdMode = false;
   hzAsrShowConfirm(false);
-  var btn = document.getElementById('hzAsrSingle');
-  if (btn) btn.classList.add('rec');
-  hzAsrRun('single', [ch], 8000, function (text, err) {
-    hzAsrS.holding = false; hzAsrS.holdMode = false;
+  hzAsrSay('🎤 正在开麦克风…', 'listen');
+  var finished = false;
+  function finish(text, err) {
+    if (finished) return;
+    finished = true;
+    if (hzAsrS.guard) { try { clearTimeout(hzAsrS.guard); } catch (e) {} hzAsrS.guard = null; }
     var b = document.getElementById('hzAsrSingle');
     if (b) b.classList.remove('rec');
     hzAsrHoldJudge(idx, ch, text, err);
-  });
-}
-
-function hzAsrHoldEnd(ev) {
-  if (ev && ev.cancelable) { try { ev.preventDefault(); } catch (e) {} }
-  if (!hzAsrS.holding) return;
-  hzAsrS.holding = false;
-  var btn = document.getElementById('hzAsrSingle');
-  if (btn) btn.classList.remove('rec');
-  if (hzAsrS.stream && hzAsrS.currentCb) { hzAsrStopRec(hzAsrS.currentCb); return; }
-  hzAsrS.pendingStop = true;
+  }
+  hzAsrS.guard = setTimeout(function () {
+    if (finished) return;
+    finished = true;
+    hzAsrForceReset();
+    hzAsrSay('⌛ 15 秒都没结果：多半是麦克风没权限或被别的程序占用。去系统设置里允许「麦克风」再点一次', 'warn');
+  }, 15000);
+  hzAsrRun('single', [ch], 8000, finish);
 }
 
 function hzAsrHoldJudge(idx, ch, text, err) {
   if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
-  if (!text) { if (err !== 'empty') hzAsrSay('😶 没听到声音，按住再读一次～', 'warn'); return; }
-  var heard = hzAsrClean(text);
-  if (heard.indexOf(ch) >= 0) {
+  if (!text) {
+    if (err === 'empty' || err === 'no-speech' || !err) hzAsrSay('😶 没听到声音，再点一次读～', 'warn');
+    return;
+  }
+  if (hzAsrCharMatch(text, ch)) {
     hzAsrSay('✅ 答对了！我听到「' + text + '」', 'ok');
     hzAsrS.pendingIdx = idx;
     _hzHgPickIdx = idx;
     hzAsrShowConfirm(true);
     try { speakZh('答对了'); } catch (e) {}
   } else {
-    hzAsrSay('❌ 答错了，我听到「' + text + '」，再按住读一次', 'warn');
+    hzAsrSay('❌ 答错了，我听到「' + text + '」，再点一次读', 'warn');
     try { speakZh('答错了，再读一次'); } catch (e) {}
   }
 }
 
-function hzAsrBindHold() {
+function hzAsrBindBtn() {
   var btn = document.getElementById('hzAsrSingle');
-  if (!btn || btn._hold) return;
-  btn._hold = 1;
-  btn.textContent = '🎤 按住读・松手判对错';
-  btn.style.touchAction = 'none';
-  btn.style.webkitUserSelect = 'none';
-  btn.addEventListener('touchstart', hzAsrHoldStart, { passive: false });
-  btn.addEventListener('touchend', hzAsrHoldEnd);
-  btn.addEventListener('touchcancel', hzAsrHoldEnd);
-  btn.addEventListener('mousedown', hzAsrHoldStart);
-  btn.addEventListener('mouseup', hzAsrHoldEnd);
-  btn.addEventListener('mouseleave', function () { if (hzAsrS.holding) hzAsrHoldEnd(); });
-  btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  if (!btn) return;
+  if ((btn.textContent || '').indexOf('点我读') < 0) btn.textContent = '🎤 点我读（读完自动判）';
+  btn.style.touchAction = 'manipulation';
 }
+
+// 环境提示：云端识别没开通时，明确写在按钮下面，别让孩子以为是自己读错了
+function hzAsrShowEnv() {
+  var el = document.getElementById('hzAsrEnv');
+  if (!el) return;
+  hzAsrCheckCloud(function (cloud) {
+    if (cloud) {
+      if (!hzAsrCanRec()) {
+        el.style.display = 'block';
+        el.textContent = '⚠️ 这台设备不能录音：APK 请装含麦克风权限的新版';
+      } else {
+        el.style.display = 'none';
+        el.textContent = '';
+      }
+      return;
+    }
+    el.style.display = 'block';
+    el.textContent = '⚠️ 云端语音识别还没开通 —— 手机/APK 上现在只能录音回放' +
+      (hzAsrBrowserSR() ? '（电脑 Edge 自带识别，可直接判）' : '') + '。开通后自动判对错。';
+  });
+}
+
+// 兼容旧调用名
+function hzAsrBindHold() { hzAsrBindBtn(); hzAsrShowEnv(); }
 
 function hzAsrGroupRead() {
   var g = _hzHgGroup, s = HONGEN_GROUPS[g] || '';
