@@ -3202,12 +3202,12 @@ input { font-family:inherit; }
               <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
             </div>
             <div class="hz-hg-mic-row">
-              <button class="hz-hg-mic" id="hzAsrSingle" onclick="hzAsrSingle()">🎤 我读一下</button>
+              <button class="hz-hg-mic" id="hzAsrSingle">🎤 按住读</button>
               <button class="hz-hg-mic alt" onclick="hzAsrGroupRead()">🎤 整组读一遍</button>
             </div>
             <div class="hz-hg-asr" id="hzAsrTip"></div>
             <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
-              <div>读对啦！这个字认识吗？</div>
+              <div>答对了！这个字认识吗？</div>
               <button onclick="hzAsrConfirm(1)">✅ 认识</button>
               <button class="ghost" onclick="hzAsrConfirm(0)">再看看</button>
             </div>
@@ -21165,12 +21165,12 @@ input { font-family:inherit; }
               <button class="hz-hg-act no" onclick="hzHgMark(0)">❌ 不认识</button>
             </div>
             <div class="hz-hg-mic-row">
-              <button class="hz-hg-mic" id="hzAsrSingle" onclick="hzAsrSingle()">🎤 我读一下</button>
+              <button class="hz-hg-mic" id="hzAsrSingle">🎤 按住读</button>
               <button class="hz-hg-mic alt" onclick="hzAsrGroupRead()">🎤 整组读一遍</button>
             </div>
             <div class="hz-hg-asr" id="hzAsrTip"></div>
             <div class="hz-hg-confirm" id="hzAsrConfirm" style="display:none;">
-              <div>读对啦！这个字认识吗？</div>
+              <div>答对了！这个字认识吗？</div>
               <button onclick="hzAsrConfirm(1)">✅ 认识</button>
               <button class="ghost" onclick="hzAsrConfirm(0)">再看看</button>
             </div>
@@ -29380,6 +29380,7 @@ function hzHgRender() {
     }
   }
   hzHgStat();
+  hzAsrBindHold();
 }
 
 function hzHgPick(gi) {
@@ -29390,7 +29391,11 @@ function hzHgPick(gi) {
   var big = document.getElementById('hzHgBigChar');
   if (big) big.textContent = ch;
   hzHgRender();
-  speakZh(ch);
+  // 2026-11-09：点字不再自动读出声，让孩子自己认、自己读
+  hzAsrShowConfirm(false);
+  hzAsrS.pendingIdx = -1;
+  hzAsrSay('👀 看清这个字，按住下面的 🎤 读出来', '');
+  hzAsrBindHold();
 }
 
 function hzHgSpeak() {
@@ -29569,6 +29574,7 @@ function hzAsrStopRec(cb) {
 
 function hzAsrStartRec(maxMs, cb) {
   hzAsrS.stopping = false;
+  hzAsrS.currentCb = cb;
   if (!hzAsrCanRec()) { cb('', 'unsupported'); return; }
   navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } })
     .then(function (stream) {
@@ -29588,7 +29594,7 @@ function hzAsrStartRec(maxMs, cb) {
         var now = Date.now();
         if (rms > 0.015) { hzAsrS.silentSince = 0; }
         else if (!hzAsrS.silentSince) { hzAsrS.silentSince = now; }
-        else if (now - hzAsrS.silentSince > 1300 && now - hzAsrS.startedAt > 800) {
+        else if (!hzAsrS.holdMode && now - hzAsrS.silentSince > 1300 && now - hzAsrS.startedAt > 800) {
           hzAsrStopRec(cb);
         }
       };
@@ -29599,6 +29605,7 @@ function hzAsrStartRec(maxMs, cb) {
       hzAsrS.timer = setTimeout(function () { hzAsrStopRec(cb); }, maxMs);
       var btn = document.getElementById('hzAsrSingle');
       if (btn) btn.classList.add('rec');
+      if (hzAsrS.pendingStop) { hzAsrS.pendingStop = false; hzAsrStopRec(cb); }
     })
     .catch(function (err) {
       var name = (err && err.name) || '';
@@ -29691,22 +29698,68 @@ function hzAsrRun(mode, chars, maxMs, cb) {
   });
 }
 
-function hzAsrSingle() {
-  if (_hzHgPickIdx < 0) { alert('先在上面点一个字，再读给我听'); return; }
+// 🎤 按住读、松手判对错（2026-11-09 亚青要求：点字不自动读，让孩子自己认自己读）
+function hzAsrSingle() { hzAsrHoldStart(); }
+
+function hzAsrHoldStart(ev) {
+  if (ev && ev.cancelable) { try { ev.preventDefault(); } catch (e) {} }
+  if (hzAsrS.busy || hzAsrS.holding) return;
+  if (_hzHgPickIdx < 0) { alert('先点一个字，再读给我听'); return; }
   var idx = _hzHgPickIdx, ch = hzHgCharAt(idx);
   if (!ch) return;
-  hzAsrRun('single', [ch], 3000, function (text, err) {
-    if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
-    if (!text) { if (err !== 'empty') hzAsrSay('😶 没听到声音，再读一次～', 'warn'); return; }
-    if (hzAsrClean(text).indexOf(ch) >= 0) {
-      hzAsrSay('\u2705 听到「' + text + '」—— 读对啦！', 'ok');
-      hzAsrS.pendingIdx = idx;
-      hzAsrShowConfirm(true);
-      try { speakZh('真棒'); } catch (e) {}
-    } else {
-      hzAsrSay('🤔 我听到「' + text + '」，跟「' + ch + '」不太一样，再读一次～', 'warn');
-    }
+  hzAsrS.holdIdx = idx; hzAsrS.holdChar = ch;
+  hzAsrS.holding = true; hzAsrS.pendingStop = false; hzAsrS.holdMode = true;
+  hzAsrShowConfirm(false);
+  var btn = document.getElementById('hzAsrSingle');
+  if (btn) btn.classList.add('rec');
+  hzAsrRun('single', [ch], 8000, function (text, err) {
+    hzAsrS.holding = false; hzAsrS.holdMode = false;
+    var b = document.getElementById('hzAsrSingle');
+    if (b) b.classList.remove('rec');
+    hzAsrHoldJudge(idx, ch, text, err);
   });
+}
+
+function hzAsrHoldEnd(ev) {
+  if (ev && ev.cancelable) { try { ev.preventDefault(); } catch (e) {} }
+  if (!hzAsrS.holding) return;
+  hzAsrS.holding = false;
+  var btn = document.getElementById('hzAsrSingle');
+  if (btn) btn.classList.remove('rec');
+  if (hzAsrS.stream && hzAsrS.currentCb) { hzAsrStopRec(hzAsrS.currentCb); return; }
+  hzAsrS.pendingStop = true;
+}
+
+function hzAsrHoldJudge(idx, ch, text, err) {
+  if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
+  if (!text) { if (err !== 'empty') hzAsrSay('😶 没听到声音，按住再读一次～', 'warn'); return; }
+  var heard = hzAsrClean(text);
+  if (heard.indexOf(ch) >= 0) {
+    hzAsrSay('✅ 答对了！我听到「' + text + '」', 'ok');
+    hzAsrS.pendingIdx = idx;
+    _hzHgPickIdx = idx;
+    hzAsrShowConfirm(true);
+    try { speakZh('答对了'); } catch (e) {}
+  } else {
+    hzAsrSay('❌ 答错了，我听到「' + text + '」，再按住读一次', 'warn');
+    try { speakZh('答错了，再读一次'); } catch (e) {}
+  }
+}
+
+function hzAsrBindHold() {
+  var btn = document.getElementById('hzAsrSingle');
+  if (!btn || btn._hold) return;
+  btn._hold = 1;
+  btn.textContent = '🎤 按住读・松手判对错';
+  btn.style.touchAction = 'none';
+  btn.style.webkitUserSelect = 'none';
+  btn.addEventListener('touchstart', hzAsrHoldStart, { passive: false });
+  btn.addEventListener('touchend', hzAsrHoldEnd);
+  btn.addEventListener('touchcancel', hzAsrHoldEnd);
+  btn.addEventListener('mousedown', hzAsrHoldStart);
+  btn.addEventListener('mouseup', hzAsrHoldEnd);
+  btn.addEventListener('mouseleave', function () { if (hzAsrS.holding) hzAsrHoldEnd(); });
+  btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 }
 
 function hzAsrGroupRead() {
@@ -29729,6 +29782,7 @@ function hzAsrGroupRead() {
       try { speakZh('全对，真棒'); } catch (e) {}
     } else {
       hzAsrSay('本组读到 ' + got + '/10' + (miss.length ? '，还差：' + miss.join(' ') : '') + '（点字可单独再读）', got >= 6 ? 'ok' : 'warn');
+      try { speakZh('答对' + got + '个'); } catch (e) {}
     }
   });
 }
