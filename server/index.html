@@ -29489,6 +29489,8 @@ function hzAsrShowConfirm(show) {
     if (lb) lb.textContent = '这个字认识吗？';
     var gh = el.querySelector('button.ghost');
     if (gh) gh.textContent = '再看看';
+    var sk = document.getElementById('_hzSkipBtn');
+    if (sk) sk.style.display = 'none';
   }
   el.style.display = show ? 'block' : 'none';
 }
@@ -29501,10 +29503,31 @@ function hzAsrManual(idx, ch) {
   if (lb) lb.textContent = '机器没听准，你自己看：这个字认识吗？';
   var gh = el.querySelector('button.ghost');
   if (gh) gh.textContent = '🔄 再读一次';
+  var sk = document.getElementById('_hzSkipBtn');
+  if (!sk) {
+    sk = document.createElement('button');
+    sk.id = '_hzSkipBtn';
+    sk.className = 'ghost';
+    sk.textContent = '❌ 不认识';
+    sk.onclick = function () { hzAsrSkip(); };
+    el.appendChild(sk);
+  }
+  sk.style.display = '';
   hzAsrS.pendingIdx = idx;
   _hzHgPickIdx = idx;
   el.style.display = 'block';
-  hzAsrSay('🤝 机器没听准，不怪你 —— 认识就点「认识」，再读一次也可以', 'warn');
+  hzAsrSay('🤝 机器没听准，不怪你 —— 认识就点「认识」，也可以直接跳过', 'warn');
+}
+
+// 机器判不了、孩子也不认识 → 直接进下一个字，不卡住
+function hzAsrSkip() {
+  var el = document.getElementById('hzAsrConfirm');
+  if (el) el.style.display = 'none';
+  hzAsrS.pendingIdx = -1;
+  hzAsrS.miss = 0; hzAsrS.missIdx = -1;
+  hzHintClear();
+  hzAsrSay('👌 这个字先放过，学后面的', 'warn');
+  hzHgAdvance();
 }
 
 function hzAsrConfirm(yes) {

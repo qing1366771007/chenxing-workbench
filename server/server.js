@@ -631,13 +631,14 @@ app.get('/api/asr/status', (req, res) => {
 
 // Cloudflare Workers AI（Whisper）识别：免费、国内可直连、手机/APK 都能用
 // prompt = 候选字提示（当前这一组 10 个字），能给单字识别做偏置
-function whisperAsr(audio, prompt) {
+function whisperAsr(audio, prompt, lang) {
   return new Promise((resolve) => {
     try {
       const https = require('https');
       const u = new URL(ASR_WORKER_URL);
       const body = { audio: audio, fmt: 'wav' };
       if (prompt) body.prompt = prompt;
+      if (lang) body.language = lang;
       const payload = JSON.stringify(body);
       const rq = https.request({
         hostname: u.hostname,
@@ -709,13 +710,14 @@ app.post('/api/asr', async (req, res) => {
   const audio = req.body && req.body.audio;
   const rate = Number((req.body && req.body.rate) || 16000);
   const prompt = (req.body && req.body.prompt) || '';
+  const lang = (req.body && req.body.lang) || '';
   if (!audio) return res.status(400).json({ ok: false, err: 'no_audio' });
 
   const token = await getBaiduAsrToken();
   if (!token) {
     // 先带候选字提示，万一 Worker 不认这个字段就退回裸请求，保证不影响可用性
-    let w = await whisperAsr(audio, prompt);
-    if (!(w && w.ok && w.text) && prompt) w = await whisperAsr(audio, '');
+    let w = await whisperAsr(audio, prompt, lang);
+    if (!(w && w.ok && w.text) && (prompt || lang)) w = await whisperAsr(audio, '', '');
     if (w && w.ok && w.text) return res.json({ ok: true, text: w.text, engine: 'whisper' });
     return res.json({ ok: false, err: (w && w.err) || 'asr_unavailable' });
   }
