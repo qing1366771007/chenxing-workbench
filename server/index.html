@@ -36462,8 +36462,20 @@ function onLoginSuccess() {
     }
   }
 
-  syncFromCloud();
-  syncLocalToCloud();
+  // 本机已有学习数据 → 以本机为准推上云（换机 / 重装前的关键一步）
+  // 本机是空的（刚重装）→ 从云端拉回来
+  var _hasLocalBiz = false;
+  try {
+    _hasLocalBiz = !!(localStorage.getItem('cx_checkin') || localStorage.getItem('cx_stars'));
+  } catch (e) {}
+  if (_hasLocalBiz) {
+    setTimeout(function () {
+      if (window.cxCloudFullPush) window.cxCloudFullPush();
+      else syncLocalToCloud();
+    }, 400);
+  } else {
+    syncFromCloud();
+  }
 }
 
 function doLogout(silent) {
@@ -36640,6 +36652,7 @@ function refreshAllModulesData() {
   var hs = document.getElementById('homeStars');
   if (hs) hs.textContent = totalStars;
   if (typeof renderOverview === 'function') renderOverview();
+  try { if (typeof initCheckin === 'function' && document.getElementById('habitList')) initCheckin(); } catch (e) {}
 }
 
 // ============================================================
@@ -36742,6 +36755,77 @@ function cxBackupOpen(mode) {
     }
   };
 }
+
+// ===== 数据实时上云（2026-11-09）：cx_ 数据一改就推到云端，重装 / 换机登录即可恢复 =====
+(function () {
+  if (window.__cxCloudHook) return;
+  window.__cxCloudHook = true;
+
+  var SKIP = { cx_token: 1, cx_saved_accounts: 1 };
+  var _origSet = Storage.prototype.setItem;
+  var _pending = {};
+  var _timer = null;
+
+  function _parseVal(raw) {
+    try { return JSON.parse(raw); } catch (e) { return raw; }
+  }
+
+  function _loggedIn() {
+    try {
+      return typeof CLOUD_ENABLED !== 'undefined' && CLOUD_ENABLED
+        && typeof currentUser !== 'undefined' && currentUser;
+    } catch (e) { return false; }
+  }
+
+  function _pushNow() {
+    if (_timer) { clearTimeout(_timer); _timer = null; }
+    var keys = Object.keys(_pending);
+    _pending = {};
+    if (!keys.length) return;
+    if (!_loggedIn()) return;
+    keys.forEach(function (k) {
+      var raw = null;
+      try { raw = localStorage.getItem(k); } catch (e) {}
+      if (raw === null) return;
+      try {
+        api('/data/' + encodeURIComponent(k), { method: 'POST', body: _parseVal(raw) })['catch'](function () {});
+      } catch (e) {}
+    });
+  }
+
+  function _schedule(k) {
+    if (!k || k.indexOf('cx_') !== 0 || SKIP[k]) return;
+    _pending[k] = 1;
+    if (_timer) clearTimeout(_timer);
+    _timer = setTimeout(_pushNow, 1200);
+  }
+
+  Storage.prototype.setItem = function (k, v) {
+    var r = _origSet.apply(this, arguments);
+    try { if (this === window.localStorage) _schedule(k); } catch (e) {}
+    return r;
+  };
+
+  // 全量推：把本机所有 cx_ 数据推一遍（云端以本机为准）
+  window.cxCloudFullPush = function () {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf('cx_') !== 0 || SKIP[k]) continue;
+        _pending[k] = 1;
+      }
+    } catch (e) {}
+    _pushNow();
+  };
+
+  // 切后台 / 关页面 / 退到桌面时补推一次，别让最后几秒的进度掉在本地
+  document.addEventListener('visibilitychange', function () { if (document.hidden) _pushNow(); });
+  window.addEventListener('pagehide', _pushNow);
+  window.addEventListener('beforeunload', _pushNow);
+
+  // 页面加载 6 秒后若已登录（静默登录成功），也全量推一次
+  setTimeout(function () { if (_loggedIn()) window.cxCloudFullPush(); }, 6000);
+})();
 </script>
 </body>
 </html>

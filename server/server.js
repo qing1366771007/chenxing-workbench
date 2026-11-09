@@ -35,7 +35,8 @@ let memNextLogId = 1;
 
 // 中间件
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+// strict:false 才能接收纯数字/字符串 body（cx_stars 这类单值，否则 400）
+app.use(express.json({ limit: '10mb', strict: false }));
 
 // ============================================================
 // 数据库操作辅助函数
@@ -145,6 +146,10 @@ async function dbBatchSyncUserData(userId, localData) {
           updates.push({ key, value: localVal });
           merged++;
         }
+      } else {
+        // 其他数据以本地为准（旧逻辑只插不更，打卡/认字进度永远停在第一次上传的快照）
+        updates.push({ key, value: localVal });
+        merged++;
       }
     });
     
@@ -173,6 +178,9 @@ async function dbBatchSyncUserData(userId, localData) {
         memUserData[userId][key] = { value: localVal, updatedAt: now };
         merged++;
       }
+    } else {
+      memUserData[userId][key] = { value: localVal, updatedAt: now };
+      merged++;
     }
   });
   return { ok: true, merged, total: Object.keys(memUserData[userId]).length };
@@ -305,7 +313,7 @@ app.post('/api/register', async (req, res) => {
       parent_id: parentId
     });
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '3650d' });
     res.json({
       token,
       user: {
@@ -336,7 +344,7 @@ app.post('/api/login', async (req, res) => {
     const valid = bcrypt.compareSync(password, user.password);
     if (!valid) return res.status(400).json({ error: '用户名或密码错误' });
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '3650d' });
     res.json({
       token,
       user: {
