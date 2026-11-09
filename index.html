@@ -29435,6 +29435,7 @@ function hzHgPick(gi) {
   hzAsrShowConfirm(false);
   hzAsrS.pendingIdx = -1;
   hzHintClear();
+  hzAsrS.miss = 0; hzAsrS.missIdx = -1;
   hzAsrSay('👀 看清这个字，点下面的 🎤 读给我听', '');
   hzAsrBindHold();
 }
@@ -29482,7 +29483,28 @@ function hzAsrSay(msg, cls) {
 
 function hzAsrShowConfirm(show) {
   var el = document.getElementById('hzAsrConfirm');
-  if (el) el.style.display = show ? 'block' : 'none';
+  if (!el) return;
+  if (show) {
+    var lb = el.querySelector('div');
+    if (lb) lb.textContent = '这个字认识吗？';
+    var gh = el.querySelector('button.ghost');
+    if (gh) gh.textContent = '再看看';
+  }
+  el.style.display = show ? 'block' : 'none';
+}
+
+// 识别两次都对不上：给「认识」出口，别让孩子在同一个字上死循环
+function hzAsrManual(idx, ch) {
+  var el = document.getElementById('hzAsrConfirm');
+  if (!el) return;
+  var lb = el.querySelector('div');
+  if (lb) lb.textContent = '机器没听准，你自己看：这个字认识吗？';
+  var gh = el.querySelector('button.ghost');
+  if (gh) gh.textContent = '🔄 再读一次';
+  hzAsrS.pendingIdx = idx;
+  _hzHgPickIdx = idx;
+  el.style.display = 'block';
+  hzAsrSay('🤝 机器没听准，不怪你 —— 认识就点「认识」，再读一次也可以', 'warn');
 }
 
 function hzAsrConfirm(yes) {
@@ -29511,8 +29533,20 @@ function hzAsrCharsSame(a, b) {
   return hzAsrPyStrip(A[0]) === hzAsrPyStrip(B[0]);
 }
 
+var HZ_DIGIT_MAP = { '0': '零', '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九', '〇': '零', '两': '二' };
+function hzAsrNormDigits(t) {
+  return String(t || '').replace(/[0-9〇两]/g, function (c) { return HZ_DIGIT_MAP[c] || c; });
+}
+
+// 当前这一组 10 个字交给识别引擎做偏置 —— 单字识别准确率会明显好一些
+function hzAsrPrompt() {
+  var g = (typeof HONGEN_GROUPS !== 'undefined' && HONGEN_GROUPS[_hzHgGroup]) || '';
+  if (!g) return '';
+  return '这是单个汉字的读音，只可能是：' + g.split('').join('、');
+}
+
 function hzAsrClean(t) {
-  return String(t || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+  return hzAsrNormDigits(String(t || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''));
 }
 
 // 单字判定：只认「就是这个字」或「两个字以内含这个字」
@@ -29575,22 +29609,46 @@ function hzAsrB64(bytes) {
 }
 
 function hzAsrWav(bufs, rate) {
-  var len = 0, i;
+  var len = 0, i, k;
   for (i = 0; i < bufs.length; i++) len += bufs[i].length;
   if (len < 1600) return null;
   var all = new Float32Array(len), o = 0;
   for (i = 0; i < bufs.length; i++) { all.set(bufs[i], o); o += bufs[i].length; }
-  var outRate = 16000, ratio = rate / outRate, n = Math.floor(len / ratio);
+
+  // ① 先测整体音量，再做自适应静音门限（孩子小声读也能留住）
+  var peakAll = 0;
+  for (i = 0; i < len; i++) { var q = Math.abs(all[i]); if (q > peakAll) peakAll = q; }
+  hzAsrS.peak = peakAll;
+  if (peakAll < 0.0025) { hzAsrS.quiet = true; return null; }   // 真没声音
+
+  var TH = Math.max(0.005, peakAll * 0.08), s0 = -1, s1 = -1;
+  for (i = 0; i < len; i++) { if (Math.abs(all[i]) > TH) { s0 = i; break; } }
+  if (s0 < 0) { hzAsrS.quiet = true; return null; }
+  for (i = len - 1; i >= 0; i--) { if (Math.abs(all[i]) > TH) { s1 = i; break; } }
+  var pad = Math.floor(rate * 0.12);
+  s0 = Math.max(0, s0 - pad); s1 = Math.min(len - 1, s1 + pad);
+  var segLen = s1 - s0 + 1;
+  if (segLen < rate * 0.15) { hzAsrS.quiet = true; return null; }
+
+  // ② 音量归一化：孩子声音小、离麦远，这一步最关键
+  var peak = 0;
+  for (i = s0; i <= s1; i++) { var ab = Math.abs(all[i]); if (ab > peak) peak = ab; }
+  hzAsrS.quiet = peak < 0.015;
+  var gain = peak > 0.001 ? Math.min(60, 0.82 / peak) : 1;
+
+  // ③ 重采样 16k（盒式低通）
+  var outRate = 16000, ratio = rate / outRate, n = Math.max(1, Math.floor(segLen / ratio));
   var pcm = new Int16Array(n);
   for (i = 0; i < n; i++) {
-    var s = Math.floor(i * ratio), e2 = Math.min(len, Math.floor((i + 1) * ratio));
+    var st = s0 + Math.floor(i * ratio), en = Math.min(s1 + 1, s0 + Math.floor((i + 1) * ratio));
     var sum = 0, c = 0;
-    for (var k = s; k < e2; k++) { sum += all[k]; c++; }
-    var v = c ? sum / c : 0;
+    for (k = st; k < en; k++) { sum += all[k]; c++; }
+    var v = (c ? sum / c : 0) * gain;
     if (v > 1) v = 1;
     if (v < -1) v = -1;
     pcm[i] = v < 0 ? v * 32768 : v * 32767;
   }
+  hzAsrS.segMs = Math.round(segLen / rate * 1000);
   var bytes = new Uint8Array(44 + pcm.length * 2);
   var dv = new DataView(bytes.buffer);
   function ws(off, str) { for (var j = 0; j < str.length; j++) dv.setUint8(off + j, str.charCodeAt(j)); }
@@ -29639,7 +29697,7 @@ function hzAsrStopRec(cb) {
     else { cb('', j.err || ('http' + x.status)); }
   };
   x.onerror = function () { cb('', 'neterr'); };
-  x.send(JSON.stringify({ audio: hzAsrB64(wav), rate: 16000 }));
+  x.send(JSON.stringify({ audio: hzAsrB64(wav), rate: 16000, prompt: hzAsrPrompt() }));
 }
 
 function hzAsrStartRec(maxMs, cb) {
@@ -29951,14 +30009,27 @@ function cxFireworks(opt) {
 function hzAsrHoldJudge(idx, ch, text, err) {
   if (err === 'playback' || err === 'unsupported' || err === 'denied' || err === 'no_key') return;
   if (!text) {
-    if (err === 'empty' || err === 'no-speech' || !err) hzAsrSay('😶 没听到声音，再点一次读～', 'warn');
+    if (err === 'empty' || err === 'no-speech' || !err) hzAsrSay(hzAsrS.quiet ? '🔈 声音太小了，靠近一点、大声一点读～' : '😶 没听到声音，再点一次读～', 'warn');
     else if (String(err).indexOf('timeout') >= 0) hzAsrSay('⌛ 识别太慢超时了，再点一次读～', 'warn');
     else hzAsrSay('😶 没听清，再点一次读～', 'warn');
     return;
   }
   var py = hzPyOfChar(ch);
   var pyTxt = py.show ? (py.show + (py.name ? '（' + py.name + '）' : '')) : '';
+
+  // Whisper 听不清短音频时会吐「嗯、耶、啊」这类语气词 —— 那是它的幻觉，不能算孩子读错
+  var tc = hzAsrClean(text);
+  if (tc && ['嗯', '恩', '啊', '呃', '额', '哦', '噢', '喔', '诶', '欸', '唔', '呀', '唉', '哎', '耶', '吔', '哈', '哼'].indexOf(tc) >= 0) {
+    hzAsrSay('😶 没听清（刚才只听到「' + tc + '」）～靠近一点、大声一点，再读一次', 'warn');
+    hzAsrS.miss = (hzAsrS.missIdx === idx ? (hzAsrS.miss || 0) + 1 : 1);
+    hzAsrS.missIdx = idx;
+    if (hzAsrS.miss >= 2) {
+      setTimeout(function () { if (hzAsrS.missIdx === idx) hzAsrManual(idx, ch); }, 1200);
+    }
+    return;
+  }
   if (hzAsrCharMatch(text, ch)) {
+    hzAsrS.miss = 0; hzAsrS.missIdx = -1;
     // ✅ 读对：烟花 + 弹跳 + 鼓励语音，再确认认识不认识
     hzAsrSay('✅ 读对啦！「' + ch + '」' + (pyTxt ? ' 读 ' + pyTxt : '') + '，这个字认识吗？', 'ok');
     hzHintShow(ch);
@@ -29974,9 +30045,17 @@ function hzAsrHoldJudge(idx, ch, text, err) {
     hzAsrSay('💡 再想想～这个字读 ' + (pyTxt || '？') + '，跟着念一遍再读' + (text && text !== ch ? '（我听到「' + text + '」）' : ''), 'warn');
     hzHintShow(ch);
     hzBigCharFx('shake');
+    hzAsrS.miss = (hzAsrS.missIdx === idx ? (hzAsrS.miss || 0) + 1 : 1);
+    hzAsrS.missIdx = idx;
     setTimeout(function () {
       try { speakZhSlow(ch); } catch (e1) { try { speakZh(ch); } catch (e2) {} }
     }, 260);
+    // 连读两次都没对上 → 不再让孩子卡住，把决定权交回来
+    if (hzAsrS.miss >= 2) {
+      setTimeout(function () {
+        if (hzAsrS.missIdx === idx) hzAsrManual(idx, ch);
+      }, 1300);
+    }
   }
 }
 
