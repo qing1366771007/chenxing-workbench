@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     private TextToSpeech tts;
     private static final String URL = "https://chenxing-workbench.onrender.com";
     private static final int REQ_RECORD_AUDIO = 1001;
+    // 网页请求麦克风时挂起的授权请求，等系统权限给完再放行
+    private PermissionRequest pendingPermission;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -140,9 +142,31 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            request.grant(request.getResources());
+                            String[] res = request.getResources();
+                            boolean needAudio = false;
+                            for (String r : res) {
+                                if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) {
+                                    needAudio = true;
+                                }
+                            }
+                            if (!needAudio) {
+                                request.deny();
+                                return;
+                            }
+                            // 系统层面还没给麦克风权限 → 先弹授权框，授权回来再放行
+                            if (android.os.Build.VERSION.SDK_INT >= 23
+                                    && checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                                       != PackageManager.PERMISSION_GRANTED) {
+                                pendingPermission = request;
+                                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_RECORD_AUDIO);
+                                return;
+                            }
+                            request.grant(res);
                         } catch (Exception e) {
-                            request.deny();
+                            try {
+                                request.deny();
+                            } catch (Exception ignored) {
+                            }
                         }
                     }
                 });
@@ -164,6 +188,24 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } catch (Exception e) {
+        }
+    }
+
+    // 系统授权框结果回来 → 放行或拒绝网页那边的麦克风请求
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_RECORD_AUDIO && pendingPermission != null) {
+            PermissionRequest p = pendingPermission;
+            pendingPermission = null;
+            try {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    p.grant(p.getResources());
+                } else {
+                    p.deny();
+                }
+            } catch (Exception e) {
+            }
         }
     }
 

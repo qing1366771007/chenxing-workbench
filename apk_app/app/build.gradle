@@ -10,13 +10,29 @@ android {
         applicationId "com.chenxing.workbench"
         minSdk 21
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1"
+    }
+
+    // 固定签名：以前用 CI 每次随机生成的 debug 证书，导致新版装不上旧版（签名不一致）。
+    // 现在统一用仓库里的 cx-release.p12，以后升级可直接覆盖安装。
+    signingConfigs {
+        cx {
+            storeFile rootProject.file('cx-release.p12')
+            storeType 'PKCS12'
+            storePassword 'cxworkbench2026'
+            keyAlias 'cx'
+            keyPassword 'cxworkbench2026'
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.cx
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.cx
         }
     }
 
