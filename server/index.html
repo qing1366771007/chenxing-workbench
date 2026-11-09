@@ -2716,6 +2716,12 @@ input { font-family:inherit; }
 }
 .nav-user-logout:hover { background: rgba(0,0,0,0.1); }
 
+
+/* 题目点一下才读 */
+#mathProblem, #thinkQuestion { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#mathProblem::after, #thinkQuestion::after { content: ' \1F50A'; font-size: .55em; opacity: .4; vertical-align: middle; margin-left: 4px; }
+.cx-qping { animation: cxQPing .42s ease; }
+@keyframes cxQPing { 0% { transform: scale(1); } 40% { transform: scale(1.07); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
@@ -2916,6 +2922,7 @@ input { font-family:inherit; }
       </div>
       <button class="nav-user-logout" onclick="doLogout()" title="退出登录">⎋</button>
     </div>
+    <button class="nav-btn" onclick="cxToggleAutoSpeak()" title="自动读题：默认关，点到题目才读"><span class="nav-icon cx-autospeak-btn">🔇</span><span class="nav-label cx-autospeak-txt">自动读题 关</span></button>
     <div class="nav-stars">
       <span class="star-icon">⭐</span>
       <span class="star-count" id="totalStars">0</span>
@@ -3094,7 +3101,7 @@ input { font-family:inherit; }
               <button class="tab-item" onclick="setMathLevel(50,this)">50以内</button>
               <button class="tab-item" onclick="setMathLevel(100,this)">100以内</button>
             </div>
-            <div class="math-problem" id="mathProblem">2 + 3 =</div>
+            <div class="math-problem" id="mathProblem" onclick="cxReadQuestion(this)" title="点一下读题">2 + 3 =</div>
             <div class="math-answer-box" id="mathAnswer"></div>
             <div class="math-feedback" id="mathFeedback"></div>
             <div class="num-pad">
@@ -3271,7 +3278,7 @@ input { font-family:inherit; }
           <div class="think-progress" id="thinkProgress"></div>
           <div class="think-card" id="thinkCard">
           <div class="think-type" id="thinkType"></div>
-          <div class="think-question" id="thinkQuestion"></div>
+          <div class="think-question" id="thinkQuestion" onclick="cxReadQuestion(this)" title="点一下读题"></div>
           <div id="thinkContent"></div>
           <div class="think-feedback" id="thinkFeedback"></div>
           <button class="think-next" id="thinkNext" onclick="nextThink()" style="display:none;">下一题 ➡️</button>
@@ -13279,7 +13286,7 @@ function renderThink() {
   qEl.textContent = ex.q;
   qEl.style.cursor = 'pointer';
   qEl.title = '点一下听题目';
-  qEl.onclick = function() { speakQuestion(ex.q); };
+  qEl.onclick = function() { speakQuestion(ex.q, true); };
 
   // 分组进度条
   const prog = document.getElementById('thinkProgress');
@@ -13660,7 +13667,7 @@ function nextQuiz() {
 
   // Auto play sound for listen mode
   if (quizMode === 'listen') {
-    speakQuestion(quizCurrent.c);
+    speakQuestion(quizCurrent.c, true);   // 听音题必须读，不受开关限制
   } else {
     speakQuestion('看拼音，选出正确的字');
   }
@@ -20951,6 +20958,7 @@ input { font-family:inherit; }
     <button class="nav-btn" data-module="unit" onclick="switchModule('unit')">
       <span class="nav-icon">🔄</span><span class="nav-label">单位换算</span>
     </button>
+    <button class="nav-btn" onclick="cxToggleAutoSpeak()" title="自动读题：默认关，点到题目才读"><span class="nav-icon cx-autospeak-btn">🔇</span><span class="nav-label cx-autospeak-txt">自动读题 关</span></button>
     <div class="nav-stars">
       <span class="star-icon">⭐</span>
       <span class="star-count" id="totalStars">0</span>
@@ -21100,7 +21108,7 @@ input { font-family:inherit; }
               <button class="tab-item" onclick="setMathLevel(50,this)">50以内</button>
               <button class="tab-item" onclick="setMathLevel(100,this)">100以内</button>
             </div>
-            <div class="math-problem" id="mathProblem">2 + 3 =</div>
+            <div class="math-problem" id="mathProblem" onclick="cxReadQuestion(this)" title="点一下读题">2 + 3 =</div>
             <div class="math-answer-box" id="mathAnswer"></div>
             <div class="math-feedback" id="mathFeedback"></div>
             <div class="num-pad">
@@ -21240,7 +21248,7 @@ input { font-family:inherit; }
           <div class="think-progress" id="thinkProgress"></div>
           <div class="think-card" id="thinkCard">
           <div class="think-type" id="thinkType"></div>
-          <div class="think-question" id="thinkQuestion"></div>
+          <div class="think-question" id="thinkQuestion" onclick="cxReadQuestion(this)" title="点一下读题"></div>
           <div id="thinkContent"></div>
           <div class="think-feedback" id="thinkFeedback"></div>
           <button class="think-next" id="thinkNext" onclick="nextThink()" style="display:none;">下一题 ➡️</button>
@@ -22544,10 +22552,75 @@ function onWrong() {
   playWrongSound();
 }
 
-// 出题时朗读题目
-function speakQuestion(text) {
+// ============================================================
+// 自动朗读开关：默认关（打开软件不出声，点到哪里才读）
+// ============================================================
+function cxAutoSpeakOn() {
+  try { return localStorage.getItem('cx_autospeak') === '1'; } catch (e) { return false; }
+}
+function cxStopSpeak() {
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+  try {
+    var p = document.getElementById('ttsPlayer');
+    if (p) { p.onended = null; p.onerror = null; p.pause(); p.removeAttribute('src'); p.load(); }
+  } catch (e) {}
+  try {
+    var as = document.querySelectorAll('audio');
+    for (var i = 0; i < as.length; i++) { try { as[i].pause(); } catch (e2) {} }
+  } catch (e) {}
+  try {
+    if (window.AndroidTTS && window.AndroidTTS.stopSpeak) window.AndroidTTS.stopSpeak();
+    else if (window.AndroidTTS && window.AndroidTTS.stop) window.AndroidTTS.stop();
+  } catch (e) {}
+  var bar = document.getElementById('ttsPlayerBar');
+  if (bar) bar.classList.remove('show');
+}
+function cxSetAutoSpeak(on) {
+  try { localStorage.setItem('cx_autospeak', on ? '1' : '0'); } catch (e) {}
+  var btns = document.querySelectorAll('.cx-autospeak-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].textContent = on ? '🔊' : '🔇';
+  var txt = document.querySelectorAll('.cx-autospeak-txt');
+  for (var j = 0; j < txt.length; j++) txt[j].textContent = on ? '自动读题 开' : '自动读题 关';
+  if (!on) cxStopSpeak();
+}
+function cxToggleAutoSpeak() {
+  var v = !cxAutoSpeakOn();
+  cxSetAutoSpeak(v);
+  if (v) { try { speakZh('自动读题已打开'); } catch (e) {} }
+}
+function cxInitAutoSpeak() { cxSetAutoSpeak(cxAutoSpeakOn()); }
+
+// 出题时朗读题目 —— 默认只在开关打开时才读
+function speakQuestion(text, force) {
   if (!text) return;
-  setTimeout(function() { speakZh(text); }, 400);
+  window._cxLastQuestion = text;      // 记下题面，点题目时再读
+  if (!force && !cxAutoSpeakOn()) return;
+  setTimeout(function() { if (force || cxAutoSpeakOn()) speakZh(text); }, 400);
+}
+// 点题面 → 读一遍（不受自动读题开关限制）
+function cxReadQuestion(el) {
+  var t = '';
+  try {
+    if (el && el.id === 'mathProblem') {
+      var raw = String(el.textContent || '').replace(/\s+/g, '');
+      var m = raw.match(/^(\d+)([+\-])(\d+)/);
+      if (m) t = m[1] + (m[2] === '+' ? '加' : '减') + m[3] + '等于几';
+    }
+    if (!t && el && el.id === 'thinkQuestion') {
+      t = String(el.textContent || '').replace(/\s+/g, '');
+    }
+  } catch (e) {}
+  if (!t) t = window._cxLastQuestion || '';
+  if (!t) return;
+  try {
+    if (el) {
+      el.classList.remove('cx-qping');
+      void el.offsetWidth;
+      el.classList.add('cx-qping');
+      setTimeout(function () { try { el.classList.remove('cx-qping'); } catch (e) {} }, 420);
+    }
+  } catch (e) {}
+  speakZh(t);
 }
 
 // ============================================================
@@ -31858,7 +31931,7 @@ function renderThink() {
   qEl.textContent = ex.q;
   qEl.style.cursor = 'pointer';
   qEl.title = '点一下听题目';
-  qEl.onclick = function() { speakQuestion(ex.q); };
+  qEl.onclick = function() { speakQuestion(ex.q, true); };
 
   // 分组进度条
   const prog = document.getElementById('thinkProgress');
@@ -32239,7 +32312,7 @@ function nextQuiz() {
 
   // Auto play sound for listen mode
   if (quizMode === 'listen') {
-    speakQuestion(quizCurrent.c);
+    speakQuestion(quizCurrent.c, true);   // 听音题必须读，不受开关限制
   } else {
     speakQuestion('看拼音，选出正确的字');
   }
@@ -33010,6 +33083,7 @@ function readPoem() {
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
   if (checkCloudAvailable()) silentBackgroundLogin();
+  cxInitAutoSpeak();
   renderOverview();
   initEnglish();
   renderPinyin();
@@ -37081,7 +37155,7 @@ function syncLocalToCloud() {
   var localData = {};
   for (var i = 0; i < localStorage.length; i++) {
     var key = localStorage.key(i);
-    if (key && key.startsWith('cx_')) {
+    if (key && key.startsWith('cx_') && key !== 'cx_autospeak') {
       var val = localStorage.getItem(key);
       try {
         localData[key] = JSON.parse(val);
@@ -37110,6 +37184,7 @@ function syncFromCloud() {
 
   api('/data').then(function(data) {
     Object.keys(data).forEach(function(key) {
+      if (key === 'cx_autospeak') return;   // 本机偏好，不从云端拉
       var item = data[key];
       if (item && item.value !== undefined && item.value !== null) {
         if (typeof item.value === 'object') {
@@ -37242,7 +37317,7 @@ function cxBackupOpen(mode) {
   if (window.__cxCloudHook) return;
   window.__cxCloudHook = true;
 
-  var SKIP = { cx_token: 1, cx_saved_accounts: 1 };
+  var SKIP = { cx_token: 1, cx_saved_accounts: 1, cx_autospeak: 1 };
   var _origSet = Storage.prototype.setItem;
   var _pending = {};
   var _timer = null;
