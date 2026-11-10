@@ -6,8 +6,7 @@ name: keepalive
 # 理由：Render 免费档只有 750 实例小时/月，24h 全保活要 744h，一旦超额当整月会被停，比冷启动更糟
 on:
   schedule:
-    - cron: '0,10,20,30,40,50 0-14,21-23 * * *'
-    - cron: '5,15,25,35,45,55 0-14,21-23 * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions: {}
