@@ -1,0 +1,35 @@
+name: keepalive
+
+# 给 Render 免费实例保活：免费计划 15 分钟无请求就休眠，下次打开要等 30~60 秒
+# 两条 cron 错峰（0/10/20… 和 5/15/25…），平均 5 分钟打一次，容忍 GitHub 的调度延迟
+on:
+  schedule:
+    - cron: '0-59/10 * * * *'
+    - cron: '5-59/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Wake Render instance
+        run: |
+          URL="https://chenxing-workbench.onrender.com/api/health"
+          for i in 1 2 3; do
+            echo "--- try $i ---"
+            if curl -fsS --max-time 120 "$URL"; then
+              echo ""
+              echo "OK: instance is awake"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::keepalive ping failed 3 times"
+          exit 1
