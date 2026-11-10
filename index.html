@@ -22678,13 +22678,14 @@ function speakEnWithZh(en, zh) {
   if (window._enZhTimer) { clearTimeout(window._enZhTimer); window._enZhTimer = null; }
 
   var zhPlayed = false;
+
+  // ---------- 在线：中文（百度 TTS） ----------
   function playZh() {
     if (zhPlayed) return;
     zhPlayed = true;
     if (window._enZhTimer) { clearTimeout(window._enZhTimer); window._enZhTimer = null; }
     if (!zh) { setTimeout(function() { bar.classList.remove('show'); }, 500); return; }
 
-    // 尝试百度TTS播放中文
     var zhUrl = 'https://fanyi.baidu.com/gettts?lan=zh' +
       '&text=' + encodeURIComponent(zh) + '&spd=3&source=web';
     if (label) label.textContent = zh.length > 12 ? zh.substring(0, 12) + '...' : zh;
@@ -22694,11 +22695,9 @@ function speakEnWithZh(en, zh) {
     player.load();
     var p = player.play();
     if (p && p.catch) p.catch(function() {
-      // 百度TTS中文播放失败，回退到 Web Speech API
       bar.classList.remove('show');
       _speakSynthesis(zh, 'zh-CN');
     });
-    // 中文播完后隐藏播放器
     player.onended = function() {
       player.onended = null;
       setTimeout(function() { bar.classList.remove('show'); }, 500);
@@ -22710,46 +22709,85 @@ function speakEnWithZh(en, zh) {
     };
   }
 
-  // 第一步：播放英文（走服务器代理，绕过百度防盗链）
-  var baiduLan = 'en';
-  var url = '/api/tts?lang=' + baiduLan + '&text=' + encodeURIComponent(en) + '&spd=3';
-  if (label) label.textContent = en.length > 12 ? en.substring(0, 12) + '...' : en;
-  bar.classList.add('show');
-  player.src = url;
-  player.load();
-
-  // 英文播放完后，自动播放中文
-  player.onended = function() {
-    player.onended = null;
-    playZh();
-  };
-  // 英文播放出错，回退到 Web Speech API 读英文，然后读中文
-  player.onerror = function() {
-    player.onerror = null;
-    bar.classList.remove('show');
-    _speakSynthesisEnZh(en, zh);
-  };
-
-  // 超时保护：如果5秒后 onended/onerror 都没触发，直接回退到 Web Speech API
-  window._enZhTimer = setTimeout(function() {
-    if (!zhPlayed) {
-      console.log('TTS timeout, falling back to Web Speech');
-      bar.classList.remove('show');
-      _speakSynthesisEnZh(en, zh);
-    }
-  }, 5000);
-
-  var playPromise = player.play();
-  if (playPromise && playPromise.catch) {
-    playPromise.catch(function() {
-      // 自动播放被拦截或失败，回退到 Web Speech API
-      bar.classList.remove('show');
-      _speakSynthesisEnZh(en, zh);
+  // ---------- 本地：中文（预生成 mp3，点完英文立刻接上） ----------
+  function playZhLocal() {
+    if (zhPlayed) return;
+    if (!zh) { zhPlayed = true; setTimeout(function() { bar.classList.remove('show'); }, 500); return; }
+    var u = cxLocalAudioUrl(zh, 'zh');
+    if (!u) { playZh(); return; }
+    zhPlayed = true;
+    if (window._enZhTimer) { clearTimeout(window._enZhTimer); window._enZhTimer = null; }
+    if (label) label.textContent = zh.length > 12 ? zh.substring(0, 12) + '...' : zh;
+    var ok = cxPlayLocal(u, 1, function () {
+      zhPlayed = false;
+      _cxLogMiss(zh, 'zh');
+      playZh();
     });
+    if (!ok) { zhPlayed = false; playZh(); return; }
+    try {
+      _cxAudEl.onended = function () {
+        try { _cxAudEl.onended = null; } catch (e) {}
+        setTimeout(function () { try { bar.classList.remove('show'); } catch (e) {} }, 400);
+      };
+    } catch (e) {}
   }
+
+  // ---------- 在线：英文（服务器代理，绕过百度防盗链） ----------
+  function enOnline() {
+    var url = '/api/tts?lang=en&text=' + encodeURIComponent(en) + '&spd=3';
+    if (label) label.textContent = en.length > 12 ? en.substring(0, 12) + '...' : en;
+    bar.classList.add('show');
+    player.src = url;
+    player.load();
+    player.onended = function() {
+      player.onended = null;
+      playZh();
+    };
+    player.onerror = function() {
+      player.onerror = null;
+      bar.classList.remove('show');
+      _speakSynthesisEnZh(en, zh);
+    };
+    window._enZhTimer = setTimeout(function() {
+      if (!zhPlayed) {
+        console.log('TTS timeout, falling back to Web Speech');
+        bar.classList.remove('show');
+        _speakSynthesisEnZh(en, zh);
+      }
+    }, 5000);
+    var playPromise = player.play();
+    if (playPromise && playPromise.catch) {
+      playPromise.catch(function() {
+        bar.classList.remove('show');
+        _speakSynthesisEnZh(en, zh);
+      });
+    }
+  }
+
+  // ---------- 本地：英文（预生成 mp3，点了立刻响 → 播完接中文） ----------
+  function enLocal() {
+    var u = cxLocalAudioUrl(en, 'en');
+    if (!u) return false;
+    if (label) label.textContent = en.length > 12 ? en.substring(0, 12) + '...' : en;
+    bar.classList.add('show');
+    var ok = cxPlayLocal(u, 1, function () {
+      _cxLogMiss(en, 'en');
+      enOnline();
+    });
+    if (!ok) return false;
+    try {
+      _cxAudEl.onended = function () {
+        try { _cxAudEl.onended = null; } catch (e) {}
+        playZhLocal();
+      };
+    } catch (e) { playZhLocal(); }
+    return true;
+  }
+
+  if (enLocal()) return;
+  enOnline();
 }
 
-// Web Speech API 回退：先读英文再读中文
 function _speakSynthesisEnZh(en, zh) {
   if (!('speechSynthesis' in window)) {
     console.log('No speech synthesis available');
@@ -23600,6 +23638,8 @@ const englishData = {
     { en: 'Lemon', zh: '柠檬', emoji: '🍋' }, { en: 'Cherry', zh: '樱桃', emoji: '🍒' },
     { en: 'Coconut', zh: '椰子', emoji: '🥥' }, { en: 'Kiwi', zh: '猕猴桃', emoji: '🥝' },
     { en: 'Melon', zh: '甜瓜', emoji: '🍈' },
+    { en: 'Tangerine', zh: '桔子', emoji: '🍊' }, { en: 'Persimmon', zh: '柿子', emoji: '🟠' },
+    { en: 'Pomelo', zh: '柚子', emoji: '🟡' },
   ],
   '衣物': [
     { en: 'Shirt', zh: '衬衫', emoji: '👔' }, { en: 'T-shirt', zh: 'T恤', emoji: '👕' },
