@@ -2834,6 +2834,7 @@ input { font-family:inherit; }
         <button class="nav-btn" data-module="checkin" onclick="switchModule('checkin')">
       <span class="nav-icon">✅</span><span class="nav-label">每日打卡</span>
     </button>
+    <button class="nav-btn" data-module="goal" onclick="switchModule('goal')"><span class="nav-icon">🎯</span><span class="nav-label">目标栏</span></button>
 <div class="nav-cat">📘 基础</div>
     <button class="nav-btn" data-module="engsentence" onclick="switchModule('engsentence')">
       <span class="nav-icon">💬</span><span class="nav-label">英语句子</span>
@@ -3460,7 +3461,29 @@ input { font-family:inherit; }
       </div>
     </div>
 
-    <!-- ===== 百家姓 ===== -->
+        <!-- ===== 目标栏 ===== -->
+    <div id="module-goal" class="module-screen">
+      <div class="module-header"><span class="mh-icon">🎯</span><span class="mh-title">目标栏</span></div>
+      <div class="module-body">
+        <div id="goalProgressWrap" class="goal-progress-bar-wrap">
+          <div id="goalProgressFill" class="goal-progress-fill" style="width:0%;">
+            <span id="goalProgressText" class="goal-progress-text">0/0</span>
+          </div>
+        </div>
+        <div id="goalList" class="goal-list"></div>
+        <div id="goalCelebrate" class="goal-celebrate">🎉 太棒了！所有目标都完成啦！🎉</div>
+        <div class="goal-add-section">
+          <div class="goal-add-row">
+            <input type="text" id="goalAddInput" class="goal-add-input" placeholder="输入新目标..." onkeydown="if(event.key==='Enter')addGoal()">
+            <button class="goal-add-btn" onclick="addGoal()">+ 添加</button>
+            <button class="goal-add-btn" style="background:#fdcb6e;" onclick="printGoals()">🖨 打印</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+<!-- ===== 百家姓 ===== -->
     <div id="module-surnames" class="module-screen">
       <div class="module-header"><span class="mh-icon">📜</span><span class="mh-title">百家姓</span></div>
       <div class="module-body">
@@ -4535,6 +4558,8 @@ function refreshAllModulesData() {
   // 重新获取星星
   totalStars = parseInt(localStorage.getItem('cx_stars') || '0');
   updateTotalStars();
+  /* 云端拉回后重绘目标栏 */
+  try { if (typeof renderGoal === 'function' && document.getElementById('goalList')) renderGoal(); } catch (e) {}
 }
 
 // ============================================================
@@ -19985,8 +20010,9 @@ input { font-family:inherit; }
   font-size:12px; font-weight:700; color:#fff; white-space:nowrap;
 }
 .goal-list {
-  display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;
 }
+@media (min-width:768px) { .goal-list { grid-template-columns:repeat(3, 1fr); } }
 .goal-card {
   display:flex; align-items:center; gap:8px; background:#fff;
   border-radius:10px; padding:10px 12px; box-shadow:0 1px 4px rgba(0,0,0,0.06);
@@ -20904,6 +20930,7 @@ input { font-family:inherit; }
         <button class="nav-btn" data-module="checkin" onclick="switchModule('checkin')">
       <span class="nav-icon">✅</span><span class="nav-label">每日打卡</span>
     </button>
+    <button class="nav-btn" data-module="goal" onclick="switchModule('goal')"><span class="nav-icon">🎯</span><span class="nav-label">目标栏</span></button>
 <div class="nav-cat">📘 基础</div>
     <button class="nav-btn" data-module="english" onclick="switchModule('english')">
       <span class="nav-icon">🌍</span><span class="nav-label">英语</span>
@@ -20951,9 +20978,6 @@ input { font-family:inherit; }
     </button>
     <button class="nav-btn" data-module="antonym" onclick="switchModule('antonym')">
       <span class="nav-icon">⚖️</span><span class="nav-label">反义词</span>
-    </button>
-    <button class="nav-btn" data-module="goal" onclick="switchModule('goal')">
-      <span class="nav-icon">🎯</span><span class="nav-label">目标栏</span>
     </button>
     <button class="nav-btn" data-module="surnames" onclick="switchModule('surnames')">
       <span class="nav-icon">📜</span><span class="nav-label">百家姓</span>
@@ -25985,7 +26009,12 @@ var goalData = [];
 
 function loadGoal() {
   var saved = null;
-  try { saved = JSON.parse(localStorage.getItem('chenxing_goals')); } catch(e) {}
+  try { saved = JSON.parse(localStorage.getItem('cx_goals')); } catch(e) {}
+  /* 老版本用的是 chenxing_goals（不推云端）→ 自动搬过来 */
+  if (!saved) {
+    try { saved = JSON.parse(localStorage.getItem('chenxing_goals')); } catch(e) {}
+    if (saved) { try { localStorage.setItem('cx_goals', JSON.stringify(saved)); } catch(e) {} }
+  }
   // 以默认目标列表为准，保留已完成状态和自定义目标
   var doneMap = {};
   var customGoals = [];
@@ -26006,7 +26035,7 @@ function loadGoal() {
 }
 
 function saveGoal() {
-  try { localStorage.setItem('chenxing_goals', JSON.stringify(goalData)); } catch(e) {}
+  try { localStorage.setItem('cx_goals', JSON.stringify(goalData)); } catch(e) {}
 }
 
 function initGoal() {
