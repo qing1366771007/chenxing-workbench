@@ -3279,20 +3279,16 @@ input { font-family:inherit; }
 
         <!-- ===== 目标栏 ===== -->
     <div id="module-goal" class="module-screen">
-      <div class="module-header"><span class="mh-icon">🎯</span><span class="mh-title">目标栏</span></div>
+      <div class="module-header"><span class="mh-title">目标栏</span></div>
       <div class="module-body">
-        <div id="goalProgressWrap" class="goal-progress-bar-wrap">
-          <div id="goalProgressFill" class="goal-progress-fill" style="width:0%;">
-            <span id="goalProgressText" class="goal-progress-text">0/0</span>
-          </div>
-        </div>
+        <div id="goalProgressText" class="goal-progress-text">已完成 0 项，共 0 项</div>
         <div id="goalList" class="goal-list"></div>
-        <div id="goalCelebrate" class="goal-celebrate">🎉 太棒了！所有目标都完成啦！🎉</div>
+        <div id="goalCelebrate" class="goal-celebrate">全部完成，太棒了</div>
         <div class="goal-add-section">
           <div class="goal-add-row">
             <input type="text" id="goalAddInput" class="goal-add-input" placeholder="输入新目标..." onkeydown="if(event.key==='Enter')addGoal()">
-            <button class="goal-add-btn" onclick="addGoal()">+ 添加</button>
-            <button class="goal-add-btn" style="background:#fdcb6e;" onclick="printGoals()">🖨 打印</button>
+            <button class="goal-add-btn" onclick="addGoal()">添加</button>
+            <button class="goal-add-btn" style="background:#fdcb6e;" onclick="printGoals()">打印</button>
           </div>
         </div>
       </div>
@@ -19130,12 +19126,13 @@ input { font-family:inherit; }
   padding-right:10px; min-width:50px;
 }
 .goal-progress-text {
-  font-size:12px; font-weight:700; color:#fff; white-space:nowrap;
+  display:block; font-size:15px; font-weight:700; color:#6c5ce7; margin-bottom:12px;
 }
 .goal-list {
-  display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;
+  display:grid; grid-template-columns:1fr; gap:8px;
 }
-@media (min-width:768px) { .goal-list { grid-template-columns:repeat(3, 1fr); } }
+@media (min-width:600px) { .goal-list { grid-template-columns:repeat(2, 1fr); } }
+@media (min-width:900px) { .goal-list { grid-template-columns:repeat(3, 1fr); } }
 .goal-card {
   display:flex; align-items:center; gap:8px; background:#fff;
   border-radius:10px; padding:10px 12px; box-shadow:0 1px 4px rgba(0,0,0,0.06);
@@ -19156,7 +19153,12 @@ input { font-family:inherit; }
 .goal-check:hover { border-color:#a29bfe; }
 .goal-card.done .goal-check:hover { border-color:#00a385; }
 .goal-content { flex:1; min-width:0; }
-.goal-icon { font-size:20px; margin-right:3px; vertical-align:middle; }
+.goal-state {
+  flex-shrink:0; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;
+  padding:4px 9px; border-radius:8px; border:1.5px solid #ddd; background:#fff; color:#999;
+  transition:all .2s;
+}
+.goal-card.done .goal-state { background:#00b894; border-color:#00b894; color:#fff; }
 .goal-text {
   font-size:14px; font-weight:600; color:var(--text-dark); line-height:1.3;
   display:inline; vertical-align:middle;
@@ -19181,20 +19183,19 @@ input { font-family:inherit; }
 .goal-add-btn:hover { background:#6c5ce7; }
 .goal-add-btn:active { transform:scale(.95); }
 .goal-del-btn {
-  width:20px; height:20px; border-radius:50%; border:none; background:#ffe;
-  color:#e74c3c; font-size:12px; cursor:pointer; flex-shrink:0; transition:all .2s;
-  display:flex; align-items:center; justify-content:center;
+  border:none; background:none; color:#e74c3c; font-size:14px; cursor:pointer;
+  flex-shrink:0; padding:8px 8px; font-family:inherit; line-height:1;
 }
-.goal-del-btn:hover { background:#e74c3c; color:#fff; }
+.goal-del-btn:hover { text-decoration:underline; }
 .goal-celebrate {
   text-align:center; font-size:16px; color:#00b894; font-weight:700;
   padding:10px; display:none;
 }
 .goal-celebrate.show { display:block; animation:bounce 0.5s ease; }
 @media (max-width:480px) {
-  .goal-list { grid-template-columns:repeat(2, 1fr); }
+  .goal-list { grid-template-columns:1fr; }
   .goal-text { font-size:13px; }
-  .goal-icon { font-size:18px; }
+  .goal-state { font-size:11px; padding:3px 7px; }
 }
 
 /* ========== 百家姓模块 ========== */
@@ -20538,20 +20539,16 @@ input { font-family:inherit; }
 
     <!-- ===== 目标栏 ===== -->
     <div id="module-goal" class="module-screen">
-      <div class="module-header"><span class="mh-icon">🎯</span><span class="mh-title">目标栏</span></div>
+      <div class="module-header"><span class="mh-title">目标栏</span></div>
       <div class="module-body">
-        <div id="goalProgressWrap" class="goal-progress-bar-wrap">
-          <div id="goalProgressFill" class="goal-progress-fill" style="width:0%;">
-            <span id="goalProgressText" class="goal-progress-text">0/0</span>
-          </div>
-        </div>
+        <div id="goalProgressText" class="goal-progress-text">已完成 0 项，共 0 项</div>
         <div id="goalList" class="goal-list"></div>
-        <div id="goalCelebrate" class="goal-celebrate">🎉 太棒了！所有目标都完成啦！🎉</div>
+        <div id="goalCelebrate" class="goal-celebrate">全部完成，太棒了</div>
         <div class="goal-add-section">
           <div class="goal-add-row">
             <input type="text" id="goalAddInput" class="goal-add-input" placeholder="输入新目标..." onkeydown="if(event.key==='Enter')addGoal()">
-            <button class="goal-add-btn" onclick="addGoal()">+ 添加</button>
-            <button class="goal-add-btn" style="background:#fdcb6e;" onclick="printGoals()">🖨 打印</button>
+            <button class="goal-add-btn" onclick="addGoal()">添加</button>
+            <button class="goal-add-btn" style="background:#fdcb6e;" onclick="printGoals()">打印</button>
           </div>
         </div>
       </div>
@@ -24022,13 +24019,12 @@ function renderGoal() {
   var html = '';
   goalData.forEach(function(g, idx) {
     html += '<div class="goal-card ' + (g.done ? 'done' : '') + '">' +
-      '<div class="goal-check" onclick="toggleGoal(' + idx + ')">' + (g.done ? '✓' : '') + '</div>' +
+      '<button class="goal-state" onclick="toggleGoal(' + idx + ')">' + (g.done ? '已完成' : '未完成') + '</button>' +
       '<div class="goal-content">' +
-      '<span class="goal-icon">' + (g.icon || '🎯') + '</span>' +
       '<span class="goal-text">' + (g.text || '') + '</span>' +
       (g.desc ? '<div class="goal-desc">' + g.desc + '</div>' : '') +
       '</div>' +
-      '<button class="goal-del-btn" onclick="delGoal(' + idx + ')" title="删除">✕</button>' +
+      '<button class="goal-del-btn" onclick="delGoal(' + idx + ')" title="删除">删</button>' +
       '</div>';
   });
   list.innerHTML = html;
@@ -24040,7 +24036,7 @@ function renderGoal() {
   var txt = document.getElementById('goalProgressText');
   var celeb = document.getElementById('goalCelebrate');
   if (fill) fill.style.width = pct + '%';
-  if (txt) txt.textContent = done + '/' + total;
+  if (txt) txt.textContent = '已完成 ' + done + ' 项，共 ' + total + ' 项';
   if (celeb) {
     if (total > 0 && done === total) celeb.classList.add('show');
     else celeb.classList.remove('show');
@@ -24062,7 +24058,6 @@ function addGoal() {
   if (!text) return;
   goalData.push({
     id: 'g' + Date.now(),
-    icon: '🎯',
     text: text,
     desc: '',
     done: false
@@ -24096,7 +24091,7 @@ function printGoals() {
   html += '<div class="goal-sub"><span>姓名：__________</span><span>日期：__________</span></div>';
   html += '<div class="goal-grid">';
   goalData.forEach(function(g, idx) {
-    html += '<div class="goal-item"><span class="goal-num">' + (idx+1) + '.</span><div class="goal-box"></div><span class="goal-text">' + (g.icon || '🎯') + ' ' + (g.text || '') + '</span></div>';
+    html += '<div class="goal-item"><span class="goal-num">' + (idx+1) + '.</span><div class="goal-box"></div><span class="goal-text">' + (g.text || '') + '</span></div>';
   });
   html += '</div>';
   html += '</body></html>';
